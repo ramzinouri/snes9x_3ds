@@ -10,35 +10,34 @@ TOPDIR ?= $(CURDIR)
 include $(DEVKITARM)/3ds_rules
 
 #---------------------------------------------------------------------------------
-# TARGET is the name of the output
-# BUILD is the directory where object files & intermediate files will be placed
-# SOURCES is a list of directories containing source code
-# DATA is a list of directories containing data files
-# INCLUDES is a list of directories containing header files
-#
-# NO_SMDH: if set to anything, no SMDH file is generated.
-# ROMFS is the directory which contains the RomFS, relative to the Makefile (Optional)
-# APP_TITLE is the name of the app stored in the SMDH file (Optional)
-# APP_DESCRIPTION is the description of the app stored in the SMDH file (Optional)
-# APP_AUTHOR is the author of the app stored in the SMDH file (Optional)
-# ICON is the filename of the icon (.png), relative to the project folder.
-#   If not set, it attempts to use one of the following (in this order):
-#     - <Project name>.png
-#     - icon.png
-#     - <libctru folder>/default_icon.png
-#---------------------------------------------------------------------------------
-APP_TITLE	:=	SNES9x for 3DS
-APP_DESCRIPTION	:=	High compatibility SNES emulator for 3DS. Based on SNES9x 1.43.
-APP_AUTHOR	:=	bubble2k16
-ASSETS		:=	assets
-ICON		:=	$(ASSETS)/icon.png
 
+APP_TITLE	:=	SNES9x for 3DS
+APP_DESCRIPTION	:= SNES emulator for 3DS. Based on SNES9x 1.43.
+APP_AUTHOR	:=	bubble2k16
+VERSION_PARTS := $(subst ., ,$(shell git describe --tags --abbrev=0))
+VERSION_MAJOR := $(word 1, $(VERSION_PARTS))
+VERSION_MINOR := $(word 2, $(VERSION_PARTS))
+VERSION_MICRO := $(word 3, $(VERSION_PARTS))
+
+ifeq ($(strip $(VERSION_MAJOR)),)
+    VERSION_MAJOR := 0
+endif
+
+ifeq ($(strip $(VERSION_MINOR)),)
+    VERSION_MINOR := 0
+endif
+
+ifeq ($(strip $(VERSION_MICRO)),)
+    VERSION_MICRO := 0
+endif
+
+ASSETS		:=	$(CURDIR)/assets
+ICON		:=	$(ASSETS)/icon.png
+NO_SMDH     :=  1
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	source
-DATA		:=	data
-INCLUDES	:=	include
-#ROMFS		:=	romfs
+ROMFS		:=	$(CURDIR)/romfs
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -51,7 +50,7 @@ CFLAGS	:=	-g -w -O3 -mword-relocations -finline-limit=20000 \
 			-fomit-frame-pointer -ffunction-sections \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS -DLIBCTRU_1_0_0
+CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
@@ -74,7 +73,8 @@ LIBDIRS	:= $(CTRULIB)
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
 
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
+export OUTPUTDIR	:=	$(CURDIR)/out
+export OUTPUT	:=	$(OUTPUTDIR)/$(TARGET)
 export TOPDIR	:=	$(CURDIR)
 
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
@@ -89,21 +89,21 @@ CPPFILES	:=	3dsmain.cpp 3dsmenu.cpp 3dsopt.cpp \
 			3dsgpu.cpp 3dssound.cpp 3dsui.cpp 3dsexit.cpp \
 			3dsconfig.cpp 3dsfiles.cpp 3dsinput.cpp 3dsmatrix.cpp \
 			3dsimpl.cpp 3dsimpl_tilecache.cpp 3dsimpl_gpu.cpp \
-			gpulib.cpp \
-			bsx.cpp fxinst.cpp fxemu.cpp fxdbg.cpp \
-			c4.cpp c4emu.cpp \
-			soundux.cpp spc700.cpp apu.cpp \
-			cpuexec.cpp sa1cpu.cpp hwregisters.cpp \
-			cheats.cpp cheats2.cpp \
-			sdd1emu.cpp \
-			spc7110.cpp \
-			obc1.cpp \
-			seta.cpp seta010.cpp seta011.cpp seta018.cpp \
-			snapshot.cpp screenshot.cpp \
-			cpu.cpp sa1.cpp debug.cpp apudebug.cpp sdd1.cpp tile.cpp srtc.cpp \
-			gfx.cpp gfxhw.cpp memmap.cpp clip.cpp cliphw.cpp \
-			dsp1.cpp ppu.cpp ppuvsect.cpp dma.cpp snes9x.cpp data.cpp globals.cpp \
-			lodepng.cpp
+			gpulib.cpp lodepng.cpp \
+			Snes9x/bsx.cpp Snes9x/fxinst.cpp Snes9x/fxemu.cpp Snes9x/fxdbg.cpp \
+			Snes9x/c4.cpp Snes9x/c4emu.cpp \
+			Snes9x/soundux.cpp Snes9x/spc700.cpp Snes9x/apu.cpp \
+			Snes9x/cpuexec.cpp Snes9x/sa1cpu.cpp Snes9x/hwregisters.cpp \
+			Snes9x/cheats.cpp Snes9x/cheats2.cpp \
+			Snes9x/sdd1emu.cpp \
+			Snes9x/spc7110.cpp \
+			Snes9x/obc1.cpp \
+			Snes9x/seta.cpp Snes9x/seta010.cpp Snes9x/seta011.cpp Snes9x/seta018.cpp \
+			Snes9x/snapshot.cpp Snes9x/screenshot.cpp \
+			Snes9x/cpu.cpp Snes9x/sa1.cpp Snes9x/debug.cpp Snes9x/apudebug.cpp Snes9x/sdd1.cpp Snes9x/tile.cpp Snes9x/srtc.cpp \
+			Snes9x/gfx.cpp Snes9x/gfxhw.cpp Snes9x/memmap.cpp Snes9x/clip.cpp Snes9x/cliphw.cpp \
+			Snes9x/dsp1.cpp Snes9x/ppu.cpp Snes9x/ppuvsect.cpp Snes9x/dma.cpp Snes9x/snes9x.cpp Snes9x/data.cpp Snes9x/globals.cpp \
+			
 
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 PICAFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.v.pica)))
@@ -134,8 +134,10 @@ export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 			-I$(CURDIR)/$(BUILD) \
+			-I$(CURDIR)/$(BUILD)/Snes9x \
 			-I$(CURDIR)/$(SOURCES) \
 			-I$(CURDIR)/$(SOURCES)/unzip \
+			-I$(CURDIR)/$(SOURCES)/Snes9x \
 
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
@@ -189,26 +191,42 @@ endif
 .PHONY: $(BUILD) clean all
 
 #---------------------------------------------------------------------------------
-all: $(BUILD) cia
+all: $(BUILD) $(OUTPUT).cia $(OUTPUT)/$(TARGET).3dsx
 
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
+	@mkdir -p $(BUILD)/Snes9x
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 #---------------------------------------------------------------------------------
-cia: $(BUILD)
-ifneq ($(MAKEROM),)
-	$(MAKEROM) -rsf $(OUTPUT).rsf -elf $(OUTPUT).elf -icon $(OUTPUT).icn -banner $(OUTPUT).bnr -f cia -o $(OUTPUT).cia
-else
-	$(error "CIA creation is not supported on this platform ($(UNAME_S)_$(UNAME_M))")
-endif
+$(OUTPUT).cia: $(OUTPUT).elf $(ASSETS)/$(TARGET).bnr $(ASSETS)/$(TARGET).icn
+	@mkdir -p "$(@D)"
+	@echo building cia $(notdir $(OUTPUT).cia)
+	$(MAKEROM) -rsf $(ASSETS)/$(TARGET).rsf -target t -exefslogo -major $(VERSION_MAJOR) -minor $(VERSION_MINOR) -micro $(VERSION_MICRO) -elf $(OUTPUT).elf -icon $(ASSETS)/$(TARGET).icn -banner $(ASSETS)/$(TARGET).bnr -f cia -o $@
 
+$(OUTPUT)/$(TARGET).3dsx: $(OUTPUT).elf $(OUTPUT)/$(TARGET).smdh
+	@mkdir -p "$(@D)"
+	@echo building $(notdir $@)
+	@3dsxtool $< $@ --smdh=$(OUTPUT)/$(TARGET).smdh $(_3DSXFLAGS)
 
+$(ASSETS)/$(TARGET).bnr:
+	@mkdir -p "$(@D)"
+	@echo building banner $(notdir $@)
+	@$(ASSETS)/bannertool32 makebanner -ci $(ASSETS)/$(TARGET).cgfx -a $(ASSETS)/$(TARGET).wav -o $@
+	
+$(ASSETS)/$(TARGET).icn: $(ICON)
+	@mkdir -p "$(@D)"
+	@echo building icon $(notdir $@)
+	@$(ASSETS)/bannertool32 makesmdh -s "$(APP_TITLE)" -l "$(APP_TITLE) - $(APP_DESCRIPTION)" -p "$(APP_AUTHOR)" -i $(ICON) --flags visible,ratingrequired,recordusage --cero 153 --esrb 153 --usk 153 --pegigen 153 --pegiptr 153 --pegibbfc 153 --cob 153 --grb 153 --cgsrr 153 -o $@ 
+
+$(OUTPUT)/$(TARGET).smdh: $(ICON)
+	@mkdir -p "$(@D)"
+	@echo building $(notdir $@)
+	@smdhtool --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" $(ICON) $@
 #---------------------------------------------------------------------------------
 clean:
-	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf
-
+	@rm -fr $(BUILD) $(OUTPUTDIR)
+	@echo "Cleaned."
 
 #---------------------------------------------------------------------------------
 else
@@ -217,27 +235,12 @@ DEPENDS	:=	$(OFILES:.o=.d)
 
 #---------------------------------------------------------------------------------
 # main targets
-#---------------------------------------------------------------------------------
-ifeq ($(strip $(NO_SMDH)),)
-$(OUTPUT).3dsx	:	$(OUTPUT).elf $(OUTPUT).smdh
-else
-$(OUTPUT).3dsx	:	$(OUTPUT).elf
-endif
-
-$(OUTPUT).elf	:	$(OFILES)
-
-#---------------------------------------------------------------------------------
-# you need a rule like this for each extension you use as binary data
-#---------------------------------------------------------------------------------
-%.bin.o	:	%.bin
-#---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	@$(bin2o)
-#---------------------------------------------------------------------------------
-%.png.o	:	%.png
-#---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	@$(bin2o)
+# ---------------------------------------------------------------------------------
+$(OUTPUT).elf:	$(OFILES)
+	@mkdir -p "$(@D)"
+	@echo linking $(notdir $@)
+	@$(LD) $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) -o $@
+	@$(NM) -CSn $@ > $(notdir $*.lst)
 
 #---------------------------------------------------------------------------------
 # rules for assembling GPU shaders
