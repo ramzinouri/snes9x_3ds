@@ -116,7 +116,9 @@
 #include "seta.h"
 #include "bsx.h"
 
+#ifdef UNZIP_SUPPORT
 #include "unzip.h"
+#endif
 
 #ifdef __W32_HEAP
 #include <malloc.h>

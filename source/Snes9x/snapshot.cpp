@@ -113,7 +113,6 @@
 #include "srtc.h"
 #include "sdd1.h"
 #include "spc7110.h"
-#include "movie.h"
 #include "bufferedfilewriter.h"
 
 extern uint8 *SRAM;

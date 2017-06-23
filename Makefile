@@ -48,7 +48,7 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS	:=	-g -w -O3 -mword-relocations -finline-limit=20000 \
 			-fomit-frame-pointer -ffunction-sections \
-			$(ARCH)
+			$(ARCH) -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO)
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
 
@@ -163,27 +163,27 @@ ifneq ($(ROMFS),)
 endif
 
 #---------------------------------------------------------------------------------
-# OS detection to automatically determine the correct makerom variant to use for
+# OS detection to automatically determine the correct makerom and bannertool variant to use for
 # CIA creation
 #---------------------------------------------------------------------------------
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 MAKEROM :=
 ifeq ($(UNAME_S), Darwin)
-	ifeq ($(UNAME_M), x86_64)
-		MAKEROM := ./makerom/darwin_x86_64/makerom
-	endif
+		MAKEROM := ./tools/darwin/makerom
+		BANNERTOOL := ./tools/darwin/bannertool
 endif
 ifeq ($(UNAME_S), Linux)
-	ifeq ($(UNAME_M), x86_64)
-		MAKEROM := ./makerom/linux_x86_64/makerom
-	endif
+		MAKEROM := ./tools/linux/makerom
+		BANNERTOOL := ./tools/darwin/bannertool
 endif
 ifeq ($(findstring CYGWIN_NT, $(UNAME_S)),CYGWIN_NT)
-	MAKEROM := ./makerom/windows_x86_64/makerom.exe
+	MAKEROM := ./tools/windows/makerom.exe
+	BANNERTOOL := ./tools/windows/bannertool.exe
 endif
 ifeq ($(findstring MINGW32_NT, $(UNAME_S)), MINGW32_NT)
-	MAKEROM := ./makerom/windows_x86_64/makerom.exe
+	MAKEROM := ./tools/windows/makerom.exe
+	BANNERTOOL := ./tools/windows/bannertool.exe
 endif
 #---------------------------------------------------------------------------------
 
@@ -214,12 +214,12 @@ $(OUTPUT)/$(TARGET).3dsx: $(OUTPUT).elf $(OUTPUT)/$(TARGET).smdh
 $(ASSETS)/$(TARGET).bnr:
 	@mkdir -p "$(@D)"
 	@echo building banner $(notdir $@)
-	@$(ASSETS)/bannertool32 makebanner -ci $(ASSETS)/$(TARGET).cgfx -a $(ASSETS)/$(TARGET).wav -o $@
+	@$(BANNERTOOL) makebanner -ci $(ASSETS)/$(TARGET).cgfx -a $(ASSETS)/$(TARGET).wav -o $@
 	
 $(ASSETS)/$(TARGET).icn: $(ICON)
 	@mkdir -p "$(@D)"
 	@echo building icon $(notdir $@)
-	@$(ASSETS)/bannertool32 makesmdh -s "$(APP_TITLE)" -l "$(APP_TITLE) - $(APP_DESCRIPTION)" -p "$(APP_AUTHOR)" \
+	@$(BANNERTOOL) makesmdh -s "$(APP_TITLE)" -l "$(APP_TITLE) - $(APP_DESCRIPTION)" -p "$(APP_AUTHOR)" \
 	-i $(ICON) --flags visible,ratingrequired,recordusage --cero 153 --esrb 153 --usk 153 --pegigen 153 \
 	--pegiptr 153 --pegibbfc 153 --cob 153 --grb 153 --cgsrr 153 -o $@ 
 
@@ -229,7 +229,7 @@ $(OUTPUT)/$(TARGET).smdh: $(ICON)
 	@smdhtool --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" $(ICON) $@
 #---------------------------------------------------------------------------------
 clean:
-	@rm -fr $(BUILD) $(OUTPUTDIR)
+	@rm -fr $(BUILD) $(OUTPUTDIR) $(ASSETS)/$(TARGET).bnr $(ASSETS)/$(TARGET).icn
 	@echo "Cleaned."
 
 #---------------------------------------------------------------------------------

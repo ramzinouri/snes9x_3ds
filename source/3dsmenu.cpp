@@ -15,7 +15,7 @@
 #define MENU_HEIGHT             (14)
 #define DIALOG_HEIGHT           (5)
 
-#define SNES9X_VERSION "v1.20"
+#define SNES9X_VERSION "1.20.0"
 #define ANIMATE_TAB_STEPS 3
 
 
@@ -291,9 +291,32 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     //ui3dsDrawRect(0, 25, 320, 27, 0xeeeeee);
 
     ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, 0xFFFFFF, HALIGN_LEFT,
-        "A:Select  B:Cancel");
-    ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, 0xFFFFFF, HALIGN_RIGHT,
-        "SNES9x for 3DS " SNES9X_VERSION);
+        "A:Select  B:Back");
+    //ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, 0xFFFFFF, HALIGN_RIGHT,
+    //    "SNES9x for 3DS " SNES9X_VERSION);
+    char verText[64];
+    snprintf(verText, 64, "SNES9X for 3DS v%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO);
+    ui3dsDrawStringWithNoWrapping(10, 223, 275, 240, 0xFFFFFF, HALIGN_RIGHT,verText);
+
+    //battery display
+    ui3dsDrawRect(287, 223, 315, 236, 0xFFFFFF, 1.0f);
+    ui3dsDrawRect(284, 226, 287, 233, 0xFFFFFF, 1.0f);
+    ui3dsDrawRect(289, 224, 313, 235, 0x1976D2, 1.0f);
+    ui3dsDrawRect(291, 226, 311, 233, 0xFFFFFF, 0.5f);
+    
+    ptmuInit();
+    
+    u8 batteryChargeState = 0;
+    u8 batteryLevel = 0;
+    if(R_SUCCEEDED(PTMU_GetBatteryChargeState(&batteryChargeState)) && batteryChargeState) {
+        ui3dsDrawRect(291, 226, 311, 233, 0xFF9900, 1.0f);
+    } else if(R_SUCCEEDED(PTMU_GetBatteryLevel(&batteryLevel))) {
+        ui3dsDrawRect(311-5*(batteryLevel-1), 226, 311, 233, 0xFFFFFF, 1.0f);
+    } else {
+        ui3dsDrawRect(311, 226, 311, 233, 0xFFFFFF, 1.0f);
+    }
+ 
+    ptmuExit();
 
     int line = 0;
     int maxItems = MENU_HEIGHT;
@@ -518,7 +541,7 @@ int menu3dsMenuSelectItem(void (*itemChangedCallback)(int ID, int value))
             returnResult = -1;
             break;
         }
-
+        menu3dsDrawEverything();
         gpu3dsCheckSlider();
         hidScanInput();
         thisKeysHeld = hidKeysHeld();

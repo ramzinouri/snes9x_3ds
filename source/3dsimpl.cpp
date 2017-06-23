@@ -15,7 +15,6 @@
 #include "gfx.h"
 #include "snapshot.h"
 #include "cheats.h"
-#include "movie.h"
 #include "display.h"
 #include "soundux.h"
 
