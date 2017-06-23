@@ -14,10 +14,11 @@ include $(DEVKITARM)/3ds_rules
 APP_TITLE	:=	SNES9x for 3DS
 APP_DESCRIPTION	:= SNES emulator for 3DS. Based on SNES9x 1.43.
 APP_AUTHOR	:=	bubble2k16
-VERSION_PARTS := $(subst ., ,$(shell git describe --tags --abbrev=0))
+VERSION_PARTS := $(subst ., ,$(shell git describe --tags --abbrev=0 | cut -c 2-))
 VERSION_MAJOR := $(word 1, $(VERSION_PARTS))
 VERSION_MINOR := $(word 2, $(VERSION_PARTS))
 VERSION_MICRO := $(word 3, $(VERSION_PARTS))
+GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 
 ifeq ($(strip $(VERSION_MAJOR)),)
     VERSION_MAJOR := 0
@@ -48,7 +49,7 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS	:=	-g -w -O3 -mword-relocations -finline-limit=20000 \
 			-fomit-frame-pointer -ffunction-sections \
-			$(ARCH) -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO)
+			$(ARCH) -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) -DGIT_VERSION=\"$(GIT_VERSION)\"
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
 
@@ -95,9 +96,7 @@ CPPFILES	:=	3dsmain.cpp 3dsmenu.cpp 3dsopt.cpp \
 			Snes9x/soundux.cpp Snes9x/spc700.cpp Snes9x/apu.cpp \
 			Snes9x/cpuexec.cpp Snes9x/sa1cpu.cpp Snes9x/hwregisters.cpp \
 			Snes9x/cheats.cpp Snes9x/cheats2.cpp \
-			Snes9x/sdd1emu.cpp \
-			Snes9x/spc7110.cpp \
-			Snes9x/obc1.cpp \
+			Snes9x/sdd1emu.cpp Snes9x/spc7110.cpp Snes9x/obc1.cpp \
 			Snes9x/seta.cpp Snes9x/seta010.cpp Snes9x/seta011.cpp Snes9x/seta018.cpp \
 			Snes9x/snapshot.cpp Snes9x/screenshot.cpp \
 			Snes9x/cpu.cpp Snes9x/sa1.cpp Snes9x/debug.cpp Snes9x/apudebug.cpp Snes9x/sdd1.cpp Snes9x/tile.cpp Snes9x/srtc.cpp \
@@ -136,31 +135,9 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			-I$(CURDIR)/$(BUILD) \
 			-I$(CURDIR)/$(BUILD)/Snes9x \
 			-I$(CURDIR)/$(SOURCES) \
-			-I$(CURDIR)/$(SOURCES)/unzip \
 			-I$(CURDIR)/$(SOURCES)/Snes9x \
 
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
-
-ifeq ($(strip $(ICON)),)
-	icons := $(wildcard *.png)
-	ifneq (,$(findstring $(TARGET).png,$(icons)))
-		export APP_ICON := $(TOPDIR)/$(TARGET).png
-	else
-		ifneq (,$(findstring icon.png,$(icons)))
-			export APP_ICON := $(TOPDIR)/icon.png
-		endif
-	endif
-else
-	export APP_ICON := $(TOPDIR)/$(ICON)
-endif
-
-ifeq ($(strip $(NO_SMDH)),)
-	export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
-endif
-
-ifneq ($(ROMFS),)
-	export _3DSXFLAGS += --romfs=$(CURDIR)/$(ROMFS)
-endif
 
 #---------------------------------------------------------------------------------
 # OS detection to automatically determine the correct makerom and bannertool variant to use for
@@ -195,7 +172,7 @@ all: $(BUILD) $(OUTPUT).cia $(OUTPUT)/$(TARGET).3dsx
 
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@mkdir -p $(BUILD)/Snes9x
+	@[ -d $(BUILD)/Snes9x ] || mkdir -p $(BUILD)/Snes9x
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 #---------------------------------------------------------------------------------

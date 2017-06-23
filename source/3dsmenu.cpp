@@ -15,7 +15,6 @@
 #define MENU_HEIGHT             (14)
 #define DIALOG_HEIGHT           (5)
 
-#define SNES9X_VERSION "1.20.0"
 #define ANIMATE_TAB_STEPS 3
 
 
@@ -295,7 +294,7 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     //ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, 0xFFFFFF, HALIGN_RIGHT,
     //    "SNES9x for 3DS " SNES9X_VERSION);
     char verText[64];
-    snprintf(verText, 64, "SNES9X for 3DS v%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO);
+    snprintf(verText, 64, "SNES9X for 3DS %s", GIT_VERSION);
     ui3dsDrawStringWithNoWrapping(10, 223, 275, 240, 0xFFFFFF, HALIGN_RIGHT,verText);
 
     //battery display

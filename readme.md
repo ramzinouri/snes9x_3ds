@@ -10,7 +10,7 @@ Download the latest from:
 Give feedback / report bugs here:
    https://gbatemp.net/threads/snes9x-for-old-3ds.435568/
 
-To use:
+How to use:
 
 ### Homebrew Launcher:
 
@@ -38,37 +38,37 @@ Feedback and bug reports are welcome. Help with development is also welcome!
 
 ## Screenshots
 
-![Seiken Densetsu 3 (English Patch)](https://github.com/ramzinouri/snes9x_3ds/blob/master/screenshot/snes9x_1.jpg?raw=1)
+![Seiken Densetsu 3 (English Patch)](https://github.com/bubble2k16/snes9x_3ds/blob/master/images/snes9x_1.jpg?raw=1)
 
 Seiken Densetsu 3 (English Patch)
 
-![Secret of Mana](https://github.com/ramzinouri/snes9x_3ds/blob/master/screenshot/snes9x_2.jpg?raw=1)
+![Secret of Mana](https://github.com/bubble2k16/snes9x_3ds/blob/master/images/snes9x_2.jpg?raw=1)
 
 Secret of Mana
 
-![Super Mario Kart](https://github.com/ramzinouri/snes9x_3ds/blob/master/screenshot/snes9x_3.jpg?raw=1)
+![Super Mario Kart](https://github.com/bubble2k16/snes9x_3ds/blob/master/images/snes9x_3.jpg?raw=1)
 
 Super Mario Kart
 
-![Disney's Magical Quest 3 Starring Mickey & Donald](https://github.com/ramzinouri/snes9x_3ds/blob/master/screenshot/snes9x_4.jpg?raw=1)
+![Disney's Magical Quest 3 Starring Mickey & Donald](https://github.com/bubble2k16/snes9x_3ds/blob/master/images/snes9x_4.jpg?raw=1)
 
 Disney's Magical Quest 3 Starring Mickey & Donald
 
-![Mighty Morphin Power Rangers - The Fighting Edition](https://github.com/ramzinouri/snes9x_3ds/blob/master/screenshot/snes9x_5.jpg?raw=1)
+![Mighty Morphin Power Rangers - The Fighting Edition](https://github.com/bubble2k16/snes9x_3ds/blob/master/images/snes9x_5.jpg?raw=1)
 
 Mighty Morphin Power Rangers - The Fighting Edition
 
-![Megaman X](https://github.com/ramzinouri/snes9x_3ds/blob/master/screenshot/snes9x_6.jpg?raw=1)
+![Megaman X](https://github.com/bubble2k16/snes9x_3ds/blob/master/images/snes9x_6.jpg?raw=1)
 
 Megaman X
 
-![Castlevania - Dracula X](https://github.com/ramzinouri/snes9x_3ds/blob/master/screenshot/snes9x_7.jpg?raw=1)
-
-Castlevania - Dracula X
-
-![Megaman X3](https://github.com/ramzinouri/snes9x_3ds/blob/master/screenshot/snes9x_8.jpg?raw=1)
+![Megaman X3](https://github.com/bubble2k16/snes9x_3ds/blob/master/images/snes9x_8.jpg?raw=1)
 
 Megaman X3
+
+![Castlevania - Dracula X](https://github.com/bubble2k16/snes9x_3ds/blob/master/images/snes9x_7.jpg?raw=1)
+
+Castlevania - Dracula X
 
 -------------------------------------------------------------------------------------------------------
 

@@ -5,3 +5,5 @@ out
 *.cia
 *.elf
 *.smdh
+*.icn
+*.bnr
