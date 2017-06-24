@@ -49,7 +49,8 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS	:=	-g -w -O3 -mword-relocations -finline-limit=20000 \
 			-fomit-frame-pointer -ffunction-sections \
-			$(ARCH) -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) -DGIT_VERSION=\"$(GIT_VERSION)\"
+			$(ARCH) -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
+			-DGIT_VERSION=\"$(GIT_VERSION)\" -DUNZIP_SUPPORT=TRUE
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
 
@@ -85,14 +86,16 @@ export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
 #CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 #CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-CFILES		:=
+CFILES		:= zlib/adler32.c zlib/compress.c zlib/crc32.c zlib/deflate.c zlib/gzclose.c zlib/gzlib.c zlib/gzread.c \
+				zlib/gzwrite.c zlib/infback.c zlib/inffast.c zlib/inflate.c zlib/inftrees.c zlib/trees.c zlib/uncompr.c \
+				zlib/zutil.c unzip/unzip.c
 CPPFILES	:=	3dsmain.cpp 3dsmenu.cpp 3dsopt.cpp \
 			3dsgpu.cpp 3dssound.cpp 3dsui.cpp 3dsexit.cpp \
 			3dsconfig.cpp 3dsfiles.cpp 3dsinput.cpp 3dsmatrix.cpp \
 			3dsimpl.cpp 3dsimpl_tilecache.cpp 3dsimpl_gpu.cpp \
 			gpulib.cpp lodepng.cpp \
 			Snes9x/bsx.cpp Snes9x/fxinst.cpp Snes9x/fxemu.cpp Snes9x/fxdbg.cpp \
-			Snes9x/c4.cpp Snes9x/c4emu.cpp \
+			Snes9x/c4.cpp Snes9x/c4emu.cpp Snes9x/loadzip.cpp \
 			Snes9x/soundux.cpp Snes9x/spc700.cpp Snes9x/apu.cpp \
 			Snes9x/cpuexec.cpp Snes9x/sa1cpu.cpp Snes9x/hwregisters.cpp \
 			Snes9x/cheats.cpp Snes9x/cheats2.cpp \
@@ -134,8 +137,12 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 			-I$(CURDIR)/$(BUILD) \
 			-I$(CURDIR)/$(BUILD)/Snes9x \
+			-I$(CURDIR)/$(BUILD)/zlib \
+			-I$(CURDIR)/$(BUILD)/unzip \
 			-I$(CURDIR)/$(SOURCES) \
 			-I$(CURDIR)/$(SOURCES)/Snes9x \
+			-I$(CURDIR)/$(SOURCES)/zlib \
+			-I$(CURDIR)/$(SOURCES)/unzip \
 
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
@@ -173,6 +180,8 @@ all: $(BUILD) $(OUTPUT).cia $(OUTPUT)/$(TARGET).3dsx
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@[ -d $(BUILD)/Snes9x ] || mkdir -p $(BUILD)/Snes9x
+	@[ -d $(BUILD)/zlib ] || mkdir -p $(BUILD)/zlib
+	@[ -d $(BUILD)/unzip ] || mkdir -p $(BUILD)/unzip
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 #---------------------------------------------------------------------------------
@@ -211,6 +220,7 @@ clean:
 
 #---------------------------------------------------------------------------------
 else
+
 
 DEPENDS	:=	$(OFILES:.o=.d)
 

@@ -196,7 +196,7 @@ bool8 LoadZip(const char* zipname,
 	int calc_size = FileSize / 0x2000;
 	calc_size *= 0x2000;
 	
-	int l = unzReadCurrentFile(file,ptr,FileSize);
+	int l = unzReadCurrentFile(file,ptr,FileSize,NULL); // todo add progress
 	if(unzCloseCurrentFile(file) == UNZ_CRCERROR)
 	{
 	    unzClose(file);
@@ -251,7 +251,11 @@ bool8 LoadZip(const char* zipname,
 	    filename [len - 1]++;
 	}
 	else
+	{
 	    more = FALSE;
+		unzClose(file);
+		return (TRUE);
+	}
 	
 	if(more)
 	{
@@ -264,7 +268,7 @@ bool8 LoadZip(const char* zipname,
     } while(more);
     
     unzClose(file);
-    return (TRUE);
+    return (FALSE);
 }
 #endif
 

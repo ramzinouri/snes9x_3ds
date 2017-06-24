@@ -564,27 +564,29 @@ bool settingsLoad(bool includeGameSettings = true)
 extern SCheatData Cheat;
 void menuSetupCheats();  // forward declaration
 
-void emulatorLoadRom()
+bool emulatorLoadRom()
 {
-    consoleInit(GFX_BOTTOM, NULL);
-    gfxSetDoubleBuffering(GFX_BOTTOM, false);
-    consoleClear();
-    settingsSave(false);
     snprintf(romFileNameFullPath, _MAX_PATH, "%s%s", file3dsGetCurrentDir(), romFileName);
+    bool loaded=impl3dsLoadROM(romFileNameFullPath);
+    if(loaded)
+    {
+        consoleInit(GFX_BOTTOM, NULL);
+        gfxSetDoubleBuffering(GFX_BOTTOM, false);
+        consoleClear();
+        settingsSave(false);
 
-    impl3dsLoadROM(romFileNameFullPath);
+        GPU3DS.emulatorState = EMUSTATE_EMULATE;
+        consoleClear();
+        settingsLoad();
+        settingsUpdateAllSettings();
+        menuSetupCheats();
 
-    GPU3DS.emulatorState = EMUSTATE_EMULATE;
+        if (settings3DS.AutoSavestate)
+            impl3dsLoadStateAuto();
 
-    consoleClear();
-    settingsLoad();
-    settingsUpdateAllSettings();
-    menuSetupCheats();
-
-    if (settings3DS.AutoSavestate)
-        impl3dsLoadStateAuto();
-
-    snd3DS.generateSilence = false;
+     snd3DS.generateSilence = false;
+    }
+    return loaded;
 }
 
 
@@ -601,7 +603,7 @@ int totalRomFileCount = 0;
 //----------------------------------------------------------------------
 void fileGetAllFiles(void)
 {
-    std::vector<std::string> files = file3dsGetFiles("smc,sfc,fig", 1000);
+    std::vector<std::string> files = file3dsGetFiles("smc,sfc,fig,zip", 1000);
 
     totalRomFileCount = 0;
 
@@ -758,8 +760,16 @@ void menuSelectFile(void)
             }
             else
             {
-                emulatorLoadRom();
-                return;
+                snprintf(romFileNameFullPath, _MAX_PATH, "ROM:%s%s", file3dsGetCurrentDir(), romFileName);
+                menu3dsShowDialog("Loading...", romFileNameFullPath, DIALOGCOLOR_CYAN, NULL, 0);
+                if(emulatorLoadRom())
+                    return;
+                else
+                {
+                    menu3dsShowDialog("Error", "Oops. Unable to open Rom File", DIALOGCOLOR_RED, optionsForOk, sizeof(optionsForOk)/sizeof(SMenuItem));
+                    menu3dsHideDialog();
+                }
+                selection = -1;
             }
         }
         else if (selection == 6001)
@@ -780,7 +790,7 @@ void menuSelectFile(void)
 
     menu3dsHideMenu();
 
-    emulatorLoadRom();
+    //emulatorLoadRom();
 }
 
 
@@ -908,8 +918,16 @@ void menuPause()
                 if (loadRom)
                 {
                     strncpy(romFileNameLastSelected, romFileName, _MAX_PATH);
-                    loadRomBeforeExit = true;
-                    break;
+                    snprintf(romFileNameFullPath, _MAX_PATH, "ROM:%s%s", file3dsGetCurrentDir(), romFileName);
+                    menu3dsShowDialog("Loading...", romFileNameFullPath, DIALOGCOLOR_CYAN, NULL, 0);
+                    if(emulatorLoadRom())
+                        break;
+                    else
+                    {
+                        menu3dsShowDialog("Error", "Oops. Unable to open Rom File", DIALOGCOLOR_RED, optionsForOk, sizeof(optionsForOk)/sizeof(SMenuItem));
+                        menu3dsHideDialog();
+                    }
+                    loadRomBeforeExit = false;
                 }
             }
         }

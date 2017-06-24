@@ -882,6 +882,11 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 	
 #ifdef UNZIP_SUPPORT
 	unzFile file=NULL;
+	unzFile zip_file = 0;    
+	unz_file_info unzinfo;
+	char snes_file[256];
+	char *p;
+	uint8 *ptr=buffer;
 #endif
     
 	_splitpath (filename, drive, dir, name, ext);
@@ -900,41 +905,58 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 	else
 		nFormat = FILE_DEFAULT;
 
-
+	
 	switch( nFormat )
 	{
 	case FILE_ZIP:
-
+	{
 #ifdef UNZIP_SUPPORT
 
 		file = unzOpen(fname);
 
-		if(file != NULL)	
-		{
-			
-			// its a valid ZIP, close it and let LoadZIP handle it.
+	    zip_file = unzOpen(filename);
+        if (!zip_file) return FALSE;
+        unzGoToFirstFile (zip_file);
+ 
+        for (;;)
+        {
+        	if (unzGetCurrentFileInfo(zip_file, &unzinfo, snes_file, sizeof(snes_file), NULL, 0, NULL, 0) != UNZ_OK) return FALSE;
 
-			unzClose(file);
-		
-			if (!LoadZip (fname, &TotalFileSize, &HeaderCount, ROM))
-				return (0);
-		
-			strcpy (ROMFilename, fname);
+            p = (char*)(strrchr(snes_file, '.') + 1);
 
-		}
-		else
-		{
-			// its a bad zip file. Walk away
 
-		 	S9xMessage (S9X_ERROR, S9X_ROM_INFO, "Invalid Zip Archive.");
-			return (0);
-		}
-#else
-		S9xMessage (S9X_ERROR, S9X_ROM_INFO, "This binary was not created with Zip support.");
-		return (0);
+                if (strcasecmp(p, "smc") == 0) break;
+                if (strcasecmp(p, "sfc") == 0) break;
+                if (strcasecmp(p, "swc") == 0) break;
+                if (strcasecmp(p, "bin") == 0) break;
+                if (strcasecmp(p, "fig") == 0) break;
+                if (unzGoToNextFile(zip_file) != UNZ_OK) return FALSE;
+         }                
+         unzOpenCurrentFile (zip_file);
+
+         
+		FileSize = unzinfo.uncompressed_size;	 	 	 
+
+		unzReadCurrentFile(zip_file,(void*)(ptr), FileSize, NULL);
+
+         unzCloseCurrentFile (zip_file);
+         unzClose (zip_file);
+
+         int calc_size = (FileSize / 0x2000) * 0x2000;
+
+	    if ((FileSize - calc_size == 512 && !Settings.ForceNoHeader) ||
+			Settings.ForceHeader)
+	    {
+			memmove (ptr, ptr + 512, calc_size);
+
+			HeaderCount++;
+			FileSize -= 512;
+	    }
+	    TotalFileSize += FileSize;
+		strcpy (ROMFilename, fname);
 #endif
 		break;
-
+	}
 	case FILE_JMA:
         {
 #ifdef JMA_SUPPORT
