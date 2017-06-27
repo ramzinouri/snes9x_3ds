@@ -36,6 +36,7 @@ SMenuTab            dialogTab;
 int                 menuTabCount;
 int                 currentMenuTab = 0;
 bool                isDialog = false;
+int                 lastProgress=0;
 
 bool                transferGameScreen = false;
 int                 transferGameScreenCount = 0;
@@ -294,7 +295,7 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     //ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, 0xFFFFFF, HALIGN_RIGHT,
     //    "SNES9x for 3DS " SNES9X_VERSION);
     char verText[64];
-    snprintf(verText, 64, "SNES9X for 3DS %s", GIT_VERSION);
+    snprintf(verText, 64, "SNES9X for 3DS %s", REVISION);
     ui3dsDrawStringWithNoWrapping(10, 223, 275, 240, 0xFFFFFF, HALIGN_RIGHT,verText);
 
     //battery display
@@ -420,6 +421,29 @@ void menu3dsDrawDialog()
         dialogItemTextColor,                // headerItemTextColor
         dialogItemTextColor                 // subtitleTextColor
         );
+}
+
+void menu3dsDrawDialogProgressBar(float per)
+{
+    char text[15];
+    snprintf(text, 14, "%.2f %%", per);
+    //aptMainLoop();
+    int y = 80;
+    ui3dsSetViewport(0, 0, 320, 240);
+    ui3dsSetTranslate(0, y);
+
+    int dialogBackColor2 = ui3dsApplyAlphaToColor(0xFFFFFF, 0.5f);
+    ui3dsDrawRect(30, 100, 290, 120, 0xFFFFFF);
+    ui3dsDrawRect(31, 101, 289, 119, dialogBackColor);
+    ui3dsDrawRect(33, 103, 287, 117, dialogBackColor2);
+
+    ui3dsDrawRect(33, 103, 33+(254*per)/100, 117, 0xFFFFFF);
+
+    ui3dsDrawRect(30, 120, 290, 135, dialogBackColor);
+    ui3dsDrawStringWithNoWrapping(30, 120, 290, 135, 0xFFFFFF, HALIGN_LEFT, text);
+    ui3dsSetTranslate(0, 0);
+    menu3dsSwapBuffersAndWaitForVBlank();
+    swapBuffer = true;
 }
 
 
@@ -913,6 +937,54 @@ int menu3dsShowDialog(char *title, char *dialogText, int newDialogBackColor, SMe
         return result;
     }
     return 0;
+}
+
+int menu3dsShowDialogProgress(char *title, char *dialogText, int newDialogBackColor)
+{
+    lastProgress=0;
+    SMenuTab *currentTab = &dialogTab;
+
+    dialogBackColor = newDialogBackColor;
+
+    currentTab->Title = title;
+    currentTab->DialogText = dialogText;
+    currentTab->MenuItems = NULL;
+    currentTab->ItemCount = NULL;
+
+    currentTab->FirstItemIndex = NULL;
+    currentTab->SelectedItemIndex = NULL;
+
+
+    // fade the dialog fade in
+    //
+    aptMainLoop();
+    menu3dsDrawEverything();
+    menu3dsSwapBuffersAndWaitForVBlank();  
+    //ui3dsCopyFromFrameBuffer(savedBuffer);
+
+    isDialog = true;
+    for (int f = 8; f >= 0; f--)
+    {
+        aptMainLoop();
+        menu3dsDrawEverything(0, 0, f);    
+        menu3dsSwapBuffersAndWaitForVBlank();  
+    }
+    aptMainLoop();
+    menu3dsDrawDialogProgressBar(0);
+    menu3dsSwapBuffersAndWaitForVBlank();
+    return 0;
+}
+
+void menu3dsUpdateDialogProgress(int pos,int len)
+{
+    float p=0;
+    if(len!=0)
+        p=(len-pos)*100/len;
+    if(p>lastProgress)
+    {
+        menu3dsDrawDialogProgressBar(p);
+        lastProgress=lastProgress+2;
+    }
 }
 
 

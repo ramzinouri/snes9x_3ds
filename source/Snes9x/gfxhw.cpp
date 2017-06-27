@@ -96,7 +96,6 @@
 #include "gfx.h"
 #include "apu.h"
 #include "cheats.h"
-#include "screenshot.h"
 #include "cliphw.h"
 
 #include <3ds.h>

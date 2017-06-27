@@ -96,7 +96,6 @@
 #include "gfx.h"
 #include "apu.h"
 #include "cheats.h"
-#include "screenshot.h"
 #include "gfxhw.h"
 
 #include "3dsopt.h"
@@ -936,8 +935,6 @@ void S9xEndScreenRefresh ()
 
 		//take screenshot here.
 
-        if(Settings.TakeScreenshot)
-            S9xDoScreenshot(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 		if (Settings.DisplayFrameRate)
 	    	S9xDisplayFrameRate ();
 		if (GFX.InfoString)

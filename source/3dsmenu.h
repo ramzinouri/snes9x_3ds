@@ -69,6 +69,8 @@ void menu3dsHideDialog();
 
 bool menu3dsTakeScreenshot(const char *path);
 
+void menu3dsUpdateDialogProgress(int avail_out,int len);
+int menu3dsShowDialogProgress(char *title, char *dialogText, int newDialogBackColor);
 
 #define DIALOGCOLOR_RED     0xEC407A
 #define DIALOGCOLOR_GREEN   0x4CAF50

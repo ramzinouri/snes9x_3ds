@@ -567,9 +567,12 @@ void menuSetupCheats();  // forward declaration
 bool emulatorLoadRom()
 {
     snprintf(romFileNameFullPath, _MAX_PATH, "%s%s", file3dsGetCurrentDir(), romFileName);
+    //menu3dsShowDialog("Loading ROM...", romFileNameFullPath, DIALOGCOLOR_CYAN, NULL, 0);
+    menu3dsShowDialogProgress("Loading ROM...", romFileNameFullPath,DIALOGCOLOR_CYAN);
     bool loaded=impl3dsLoadROM(romFileNameFullPath);
     if(loaded)
     {
+        menu3dsHideDialog();
         consoleInit(GFX_BOTTOM, NULL);
         gfxSetDoubleBuffering(GFX_BOTTOM, false);
         consoleClear();
@@ -760,8 +763,6 @@ void menuSelectFile(void)
             }
             else
             {
-                snprintf(romFileNameFullPath, _MAX_PATH, "ROM:%s%s", file3dsGetCurrentDir(), romFileName);
-                menu3dsShowDialog("Loading...", romFileNameFullPath, DIALOGCOLOR_CYAN, NULL, 0);
                 if(emulatorLoadRom())
                     return;
                 else
@@ -918,8 +919,6 @@ void menuPause()
                 if (loadRom)
                 {
                     strncpy(romFileNameLastSelected, romFileName, _MAX_PATH);
-                    snprintf(romFileNameFullPath, _MAX_PATH, "ROM:%s%s", file3dsGetCurrentDir(), romFileName);
-                    menu3dsShowDialog("Loading...", romFileNameFullPath, DIALOGCOLOR_CYAN, NULL, 0);
                     if(emulatorLoadRom())
                         break;
                     else

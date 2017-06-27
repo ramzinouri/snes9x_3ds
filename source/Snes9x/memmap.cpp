@@ -115,6 +115,7 @@
 #include "spc7110.h"
 #include "seta.h"
 #include "bsx.h"
+#include "3dsmenu.h"
 
 #ifdef UNZIP_SUPPORT
 #include "unzip.h"
@@ -879,6 +880,7 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
     char fname [_MAX_PATH + 1];
 
 	unsigned long FileSize = 0;
+	int current_pos;
 	
 #ifdef UNZIP_SUPPORT
 	unzFile file=NULL;
@@ -937,7 +939,7 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
          
 		FileSize = unzinfo.uncompressed_size;	 	 	 
 
-		unzReadCurrentFile(zip_file,(void*)(ptr), FileSize, NULL);
+		unzReadCurrentFile(zip_file,(void*)(ptr), FileSize, &menu3dsUpdateDialogProgress);
 
          unzCloseCurrentFile (zip_file);
          unzClose (zip_file);
@@ -1010,8 +1012,28 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 		bool8 more = FALSE;
 		do
 		{
-			FileSize = READ_STREAM (ptr, maxsize + 0x200 - (ptr - ROM), ROMFile);
-			CLOSE_STREAM (ROMFile);
+			//FileSize = READ_STREAM (ptr, maxsize + 0x200 - (ptr - ROM), ROMFile);
+			//CLOSE_STREAM (ROMFile);
+			fseek(ROMFile,0,SEEK_END);
+	    	FileSize=ftell(ROMFile);
+	   		 fseek(ROMFile,0,SEEK_SET);
+			current_pos=FileSize;
+
+			while (current_pos>0) {
+				menu3dsUpdateDialogProgress(current_pos,FileSize);
+	    		if (current_pos>0x8000) {
+	    			fread(ptr,0x8000,1,ROMFile);
+	    			ptr+=0x8000;
+	    			current_pos-=0x8000;
+	    		} else {
+	    			fread(ptr,current_pos,1,ROMFile);
+	    			ptr+=current_pos;
+	    			current_pos=0;
+	    		}
+	    	}
+	    	menu3dsUpdateDialogProgress(current_pos,FileSize);
+	    	ptr=ROM;
+	    	fclose(ROMFile);
 			
 			int calc_size = (FileSize / 0x2000) * 0x2000;
 		

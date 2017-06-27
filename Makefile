@@ -14,27 +14,30 @@ include $(DEVKITARM)/3ds_rules
 APP_TITLE	:=	SNES9x for 3DS
 APP_DESCRIPTION	:= SNES emulator for 3DS. Based on SNES9x 1.43.
 APP_AUTHOR	:=	bubble2k16
-VERSION_PARTS := $(subst ., ,$(shell git describe --tags --abbrev=0 | cut -c 2-))
-VERSION_MAJOR := $(word 1, $(VERSION_PARTS))
-VERSION_MINOR := $(word 2, $(VERSION_PARTS))
-VERSION_MICRO := $(word 3, $(VERSION_PARTS))
-GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 
-ifeq ($(strip $(VERSION_MAJOR)),)
-    VERSION_MAJOR := 0
+REVISION := $(shell git describe --tags --match v[0-9]* --abbrev=8 | sed 's/-[0-9]*-g/-/')
+VERSION_MAJOR := $(shell git describe --tags --match v[0-9]* | cut -c2- | cut -f1 -d- | cut -f1 -d.)
+VERSION_MINOR := $(shell git describe --tags --match v[0-9]* | cut -c2- | cut -f1 -d- | cut -f2 -d.)
+VERSION_MICRO := $(shell git describe --tags --match v[0-9]* | cut -c2- | cut -f1 -d- | cut -f3 -d.)
+COMMIT := $(shell git rev-parse --short=8 HEAD)
+
+ifeq ($(strip $(REVISION)),)
+	REVISION := v0.0.0-0
+	VERSION_MAJOR := 0
+	VERSION_MINOR := 0
+	VERSION_MICRO := 0
 endif
 
-ifeq ($(strip $(VERSION_MINOR)),)
-    VERSION_MINOR := 0
+ifeq ($(strip $(COMMIT)),)
+	COMMIT := 0
 endif
 
 ifeq ($(strip $(VERSION_MICRO)),)
-    VERSION_MICRO := 0
+	VERSION_MICRO := 0
 endif
 
 ASSETS		:=	$(CURDIR)/assets
 ICON		:=	$(ASSETS)/icon.png
-NO_SMDH     :=  1
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	source
@@ -50,7 +53,7 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 CFLAGS	:=	-g -w -O3 -mword-relocations -finline-limit=20000 \
 			-fomit-frame-pointer -ffunction-sections \
 			$(ARCH) -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
-			-DGIT_VERSION=\"$(GIT_VERSION)\" -DUNZIP_SUPPORT=TRUE
+			-DREVISION=\"$(REVISION)\" -DUNZIP_SUPPORT=TRUE
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
 
@@ -95,13 +98,13 @@ CPPFILES	:=	3dsmain.cpp 3dsmenu.cpp 3dsopt.cpp \
 			3dsimpl.cpp 3dsimpl_tilecache.cpp 3dsimpl_gpu.cpp \
 			gpulib.cpp lodepng.cpp \
 			Snes9x/bsx.cpp Snes9x/fxinst.cpp Snes9x/fxemu.cpp Snes9x/fxdbg.cpp \
-			Snes9x/c4.cpp Snes9x/c4emu.cpp Snes9x/loadzip.cpp \
+			Snes9x/c4.cpp Snes9x/c4emu.cpp \
 			Snes9x/soundux.cpp Snes9x/spc700.cpp Snes9x/apu.cpp \
 			Snes9x/cpuexec.cpp Snes9x/sa1cpu.cpp Snes9x/hwregisters.cpp \
 			Snes9x/cheats.cpp Snes9x/cheats2.cpp \
 			Snes9x/sdd1emu.cpp Snes9x/spc7110.cpp Snes9x/obc1.cpp \
 			Snes9x/seta.cpp Snes9x/seta010.cpp Snes9x/seta011.cpp Snes9x/seta018.cpp \
-			Snes9x/snapshot.cpp Snes9x/screenshot.cpp \
+			Snes9x/snapshot.cpp \
 			Snes9x/cpu.cpp Snes9x/sa1.cpp Snes9x/debug.cpp Snes9x/apudebug.cpp Snes9x/sdd1.cpp Snes9x/tile.cpp Snes9x/srtc.cpp \
 			Snes9x/gfx.cpp Snes9x/gfxhw.cpp Snes9x/memmap.cpp Snes9x/clip.cpp Snes9x/cliphw.cpp \
 			Snes9x/dsp1.cpp Snes9x/ppu.cpp Snes9x/ppuvsect.cpp Snes9x/dma.cpp Snes9x/snes9x.cpp Snes9x/data.cpp Snes9x/globals.cpp \
