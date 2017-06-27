@@ -425,29 +425,32 @@ void menu3dsDrawDialog()
 
 void menu3dsDrawDialogProgressBar(float per)
 {
+    aptMainLoop();
+    menu3dsDrawEverything();
+
     char text[15];
     snprintf(text, 14, "%.2f %%", per);
-    //aptMainLoop();
+    aptMainLoop();
     int y = 80;
-    ui3dsSetViewport(0, 0, 320, 240);
-    ui3dsSetTranslate(0, y);
 
     int dialogBackColor2 = ui3dsApplyAlphaToColor(0xFFFFFF, 0.5f);
-    ui3dsDrawRect(30, 100, 290, 120, 0xFFFFFF);
-    ui3dsDrawRect(31, 101, 289, 119, dialogBackColor);
-    ui3dsDrawRect(33, 103, 287, 117, dialogBackColor2);
+    ui3dsDrawRect(30, 100+y, 290, 120+y, 0xFFFFFF);
+    ui3dsDrawRect(31, 101+y, 289, 119+y, dialogBackColor);
+    ui3dsDrawRect(33, 103+y, 287, 117+y, dialogBackColor2);
 
-    ui3dsDrawRect(33, 103, 33+(254*per)/100, 117, 0xFFFFFF);
+    ui3dsDrawRect(33, 103+y, 33+(254*per)/100, 117+y, 0xFFFFFF);
 
-    ui3dsDrawRect(30, 120, 290, 135, dialogBackColor);
-    ui3dsDrawStringWithNoWrapping(30, 120, 290, 135, 0xFFFFFF, HALIGN_LEFT, text);
-    ui3dsSetTranslate(0, 0);
+    ui3dsDrawRect(30, 120+y, 290, 135+y, dialogBackColor);
+    ui3dsDrawStringWithNoWrapping(30, 120+y, 290, 135+y, 0xFFFFFF, HALIGN_LEFT, text);
+
+ 
     menu3dsSwapBuffersAndWaitForVBlank();
     swapBuffer = true;
+
 }
 
 
-void menu3dsDrawEverything(int menuFrame = 0, int menuItemsFrame = 0, int dialogFrame = 0)
+void menu3dsDrawEverything(int menuFrame, int menuItemsFrame, int dialogFrame)
 {
     if (!isDialog)
     {
@@ -969,9 +972,6 @@ int menu3dsShowDialogProgress(char *title, char *dialogText, int newDialogBackCo
         menu3dsDrawEverything(0, 0, f);    
         menu3dsSwapBuffersAndWaitForVBlank();  
     }
-    aptMainLoop();
-    menu3dsDrawDialogProgressBar(0);
-    menu3dsSwapBuffersAndWaitForVBlank();
     return 0;
 }
 
@@ -983,7 +983,7 @@ void menu3dsUpdateDialogProgress(int pos,int len)
     if(p>lastProgress)
     {
         menu3dsDrawDialogProgressBar(p);
-        lastProgress=lastProgress+2;
+        lastProgress=lastProgress+1;
     }
 }
 

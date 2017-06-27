@@ -193,7 +193,7 @@ $(OUTPUT).cia: $(OUTPUT).elf $(ASSETS)/$(TARGET).bnr $(ASSETS)/$(TARGET).icn
 	@echo building cia $(notdir $(OUTPUT).cia)
 	$(MAKEROM) -rsf $(ASSETS)/$(TARGET).rsf -target t -exefslogo -major $(VERSION_MAJOR) -minor $(VERSION_MINOR) \
 	-micro $(VERSION_MICRO) -elf $(OUTPUT).elf -icon $(ASSETS)/$(TARGET).icn -banner $(ASSETS)/$(TARGET).bnr \
-	-f cia -o $@
+	-logo $(ASSETS)/logo.bcma.lz -f cia -o $@
 
 $(OUTPUT)/$(TARGET).3dsx: $(OUTPUT).elf $(OUTPUT)/$(TARGET).smdh
 	@mkdir -p "$(@D)"

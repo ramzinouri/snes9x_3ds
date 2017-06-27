@@ -68,6 +68,7 @@ int menu3dsShowDialog(char *title, char *dialogText, int dialogBackColor, SMenuI
 void menu3dsHideDialog();
 
 bool menu3dsTakeScreenshot(const char *path);
+void menu3dsDrawEverything(int menuFrame = 0, int menuItemsFrame = 0, int dialogFrame = 0);
 
 void menu3dsUpdateDialogProgress(int avail_out,int len);
 int menu3dsShowDialogProgress(char *title, char *dialogText, int newDialogBackColor);
