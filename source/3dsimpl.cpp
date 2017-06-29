@@ -28,6 +28,7 @@
 #include "3dsimpl.h"
 #include "3dsimpl_tilecache.h"
 #include "3dsimpl_gpu.h"
+#include "lodepng.h"
 
 // Compiled shaders
 //
@@ -77,6 +78,7 @@
 //---------------------------------------------------------
 // Our textures
 //---------------------------------------------------------
+SGPUTexture *borderTexture;
 SGPUTexture *snesMainScreenTarget;
 SGPUTexture *snesSubScreenTarget;
 
@@ -100,6 +102,59 @@ extern S9xSettings3DS settings3DS;
 // You must call snd3dsSetSampleRate here to set 
 // the CSND's sampling rate.
 //---------------------------------------------------------
+static u32 screen_next_pow_2(u32 i) {
+    i--;
+    i |= i >> 1;
+    i |= i >> 2;
+    i |= i >> 4;
+    i |= i >> 8;
+    i |= i >> 16;
+    i++;
+
+    return i;
+}
+
+bool impl3dsLoadBorderTexture(char *imgFilePath)
+{
+	unsigned char* src;
+	unsigned width, height;
+    int error = lodepng_decode32_file(&src, &width, &height, imgFilePath);
+    if (!error && width == 400 && height == 240)
+    {
+		u32 pow2Width = screen_next_pow_2(width);
+   		u32 pow2Height = screen_next_pow_2(height);
+
+		u8* pow2Tex = (u8*)linearAlloc(pow2Width * pow2Height * 4);
+    	memset(pow2Tex, 0, pow2Width * pow2Height * 4);
+		for(u32 x = 0; x < width; x++) {
+        	for(u32 y = 0; y < height; y++) {
+            	u32 dataPos = (y * width + x) * 4;
+            	u32 pow2TexPos = (y * pow2Width + x) * 4;
+
+				pow2Tex[pow2TexPos + 0] = ((u8*) src)[dataPos + 3];
+				pow2Tex[pow2TexPos + 1] = ((u8*) src)[dataPos + 2];
+				pow2Tex[pow2TexPos + 2] = ((u8*) src)[dataPos + 1];
+				pow2Tex[pow2TexPos + 3] = ((u8*) src)[dataPos + 0];
+        	}
+    	}
+		
+		GSPGPU_FlushDataCache(pow2Tex, pow2Width * pow2Height * 4);
+
+		borderTexture = gpu3dsCreateTextureInVRAM(pow2Width, pow2Height, GPU_RGBA8);
+
+		GX_DisplayTransfer((u32*)pow2Tex,GX_BUFFER_DIM(pow2Width, pow2Height),(u32*)borderTexture->PixelData,GX_BUFFER_DIM(pow2Width, pow2Height),
+		GX_TRANSFER_FLIP_VERT(1) | GX_TRANSFER_OUT_TILED(1) | GX_TRANSFER_RAW_COPY(0) | GX_TRANSFER_IN_FORMAT(GPU_RGBA8) |
+		GX_TRANSFER_OUT_FORMAT((u32) GPU_RGBA8) | GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO));
+
+		gspWaitForPPF();
+		
+		free(src);
+        linearFree(pow2Tex);
+		return true;
+    }
+	return false;
+}
+
 bool impl3dsInitializeCore()
 {
 	// Initialize our CSND engine.
@@ -145,6 +200,9 @@ bool impl3dsInitializeCore()
     // Main screen requires 8-bit alpha, otherwise alpha blending will not work well
     snesMainScreenTarget = gpu3dsCreateTextureInVRAM(256, 256, GPU_RGBA8);      // 0.250 MB
     snesSubScreenTarget = gpu3dsCreateTextureInVRAM(256, 256, GPU_RGBA8);       // 0.250 MB
+
+	if(!impl3dsLoadBorderTexture("./snes9x_3ds_Border.png"))
+		borderTexture=gpu3dsCreateTextureInVRAM(400, 240, GPU_RGBA8);
 
     // Depth texture for the sub / main screens.
     // Performance: Create depth buffers in VRAM improves GPU performance!
@@ -438,27 +496,28 @@ void impl3dsRunOneFrame(bool firstFrame, bool skipDrawingFrame)
 	t3dsStartTiming(3, "CopyFB");
 	gpu3dsSetRenderTargetToTopFrameBuffer();
 
-	if (firstFrame)
-	{
-		// Clear the entire frame buffer to black, including the borders
-		//
-		gpu3dsDisableAlphaBlending();
-		gpu3dsSetTextureEnvironmentReplaceColor();
-		gpu3dsDrawRectangle(0, 0, 400, 240, 0, 0x000000ff);
-		gpu3dsEnableAlphaBlending();
-	}
-
 	gpu3dsUseShader(1);             // for copying to screen.
 	gpu3dsDisableAlphaBlending();
 	gpu3dsDisableDepthTest();
 	gpu3dsDisableAlphaTest();
+
+	// Copy the border texture  to the 3DS frame
+	gpu3dsBindTexture(borderTexture, GPU_TEXUNIT0);
+	gpu3dsSetTextureEnvironmentReplaceTexture0();
+	gpu3dsDisableStencilTest();
+	gpu3dsAddQuadVertexes(
+	0, 0, 400, 240,settings3DS.CropPixels, settings3DS.CropPixels ? settings3DS.CropPixels : 1, 
+	400 - settings3DS.CropPixels, 240 - settings3DS.CropPixels,0.1f);
+	
+	gpu3dsDrawVertexes();
+
 
 	gpu3dsBindTextureMainScreen(GPU_TEXUNIT0);
 	gpu3dsSetTextureEnvironmentReplaceTexture0();
 	gpu3dsDisableStencilTest();
 
 	int sWidth = settings3DS.StretchWidth;
-	int sHeight = (settings3DS.StretchHeight == -1 ? PPU.ScreenHeight - 1 : settings3DS.StretchHeight);
+	int sHeight = (settings3DS.StretchHeight == -1 ? PPU.ScreenHeight + 1 : settings3DS.StretchHeight);
 	if (sWidth == 04030000)
 		sWidth = sHeight * 4 / 3;
 	else if (sWidth == 01010000)
