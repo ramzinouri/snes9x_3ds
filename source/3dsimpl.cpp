@@ -360,6 +360,8 @@ void impl3dsFinalize()
     gpu3dsDestroyTextureFromVRAM(snesMainScreenTarget);
     gpu3dsDestroyTextureFromVRAM(snesSubScreenTarget);
 
+	gpu3dsDestroyTextureFromVRAM(borderTexture);
+
     // Small bug fix. Previously forgot to destroy textures.
     //
     gpu3dsDestroyTextureFromVRAM(snesDepthForOtherTextures);
@@ -496,20 +498,33 @@ void impl3dsRunOneFrame(bool firstFrame, bool skipDrawingFrame)
 	t3dsStartTiming(3, "CopyFB");
 	gpu3dsSetRenderTargetToTopFrameBuffer();
 
+	if (firstFrame)
+	{
+		// Clear the entire frame buffer to black, including the borders
+		//
+		gpu3dsDisableAlphaBlending();
+		gpu3dsSetTextureEnvironmentReplaceColor();
+		gpu3dsDrawRectangle(0, 0, 400, 240, 0, 0x000000ff);
+		gpu3dsEnableAlphaBlending();
+	}
+
 	gpu3dsUseShader(1);             // for copying to screen.
 	gpu3dsDisableAlphaBlending();
 	gpu3dsDisableDepthTest();
 	gpu3dsDisableAlphaTest();
 
-	// Copy the border texture  to the 3DS frame
-	gpu3dsBindTexture(borderTexture, GPU_TEXUNIT0);
-	gpu3dsSetTextureEnvironmentReplaceTexture0();
-	gpu3dsDisableStencilTest();
-	gpu3dsAddQuadVertexes(
-	0, 0, 400, 240,settings3DS.CropPixels, settings3DS.CropPixels ? settings3DS.CropPixels : 1, 
-	400 - settings3DS.CropPixels, 240 - settings3DS.CropPixels,0.1f);
+	if(settings3DS.DisableBorder==0)
+	{
+		// Copy the border texture  to the 3DS frame
+		gpu3dsBindTexture(borderTexture, GPU_TEXUNIT0);
+		gpu3dsSetTextureEnvironmentReplaceTexture0();
+		gpu3dsDisableStencilTest();
+		gpu3dsAddQuadVertexes(
+		0, 0, 400, 240,settings3DS.CropPixels, settings3DS.CropPixels ? settings3DS.CropPixels : 1, 
+		400 - settings3DS.CropPixels, 240 - settings3DS.CropPixels,0.1f);
 	
-	gpu3dsDrawVertexes();
+		gpu3dsDrawVertexes();
+	}
 
 
 	gpu3dsBindTextureMainScreen(GPU_TEXUNIT0);

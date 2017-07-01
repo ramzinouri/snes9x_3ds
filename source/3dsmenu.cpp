@@ -10,6 +10,7 @@
 #include "3dsmenu.h"
 #include "3dsgpu.h"
 #include "3dsui.h"
+#include "lodepng.h"
 
 #define CONSOLE_WIDTH           40
 #define MENU_HEIGHT             (14)
@@ -1013,69 +1014,31 @@ void menu3dsHideDialog()
 
 bool menu3dsTakeScreenshot(const char* path)
 {
-    int x, y;
-
-    FILE *pFile = fopen(path, "wb");
-    if (pFile == NULL) return false;
-
-    // Modified this to take only the top screen
-    //
-    u32 bitmapsize = 400*240*2;
-    u8* tempbuf = (u8*)linearAlloc(0x8A + 400*240*2);
+    u32 buffsize = 400*240*3;
+    u8* tempbuf = (u8*)linearAlloc(buffsize);
     if (tempbuf == NULL)
-    {
-        fclose(pFile);
         return false;
-    }
-    memset(tempbuf, 0, 0x8A + bitmapsize);
-
-    *(u16*)&tempbuf[0x0] = 0x4D42;
-    *(u32*)&tempbuf[0x2] = 0x8A + bitmapsize;
-    *(u32*)&tempbuf[0xA] = 0x8A;
-    *(u32*)&tempbuf[0xE] = 0x28;
-    *(u32*)&tempbuf[0x12] = 400;
-    *(u32*)&tempbuf[0x16] = 240;
-    *(u32*)&tempbuf[0x1A] = 0x1;
-    *(u32*)&tempbuf[0x1C] = 0x10;
-    *(u32*)&tempbuf[0x1E] = 0x3;
-    *(u32*)&tempbuf[0x22] = bitmapsize;
-    *(u32*)&tempbuf[0x36] = 0x0000F800;
-    *(u32*)&tempbuf[0x3A] = 0x000007E0;
-    *(u32*)&tempbuf[0x3E] = 0x0000001F;
-    *(u32*)&tempbuf[0x42] = 0x00000000;
+    memset(tempbuf, 0, buffsize);
 
     u8* framebuf = (u8*)gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
-    for (y = 0; y < 240; y++)
-    {
-        for (x = 0; x < 400; x++)
+    for (int y = 0; y < 240; y++)
+        for (int x = 0; x < 400; x++)
         {
-            int si = 1 + (((239 - y) + (x * 240)) * 4);
-            int di = 0x8A + (x + ((239 - y) * 400)) * 2;
+            int si = (((239 - y) + (x * 240)) * 4);
+            int di =(x + y * 400 ) * 3;
 
-            u16 word = RGB8_to_565(framebuf[si++], framebuf[si++], framebuf[si++]);
-            tempbuf[di++] = word & 0xFF;
-            tempbuf[di++] = word >> 8;
+            tempbuf[di+0] = framebuf[si+3];
+            tempbuf[di+1] = framebuf[si+2];
+            tempbuf[di+2] = framebuf[si+1];
         }
-    }
 
-    /*
-    framebuf = (u8*)gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
-    for (y = 0; y < 240; y++)
-    {
-        for (x = 0; x < 320; x++)
-        {
-            int si = ((239 - y) + (x * 240)) * 2;
-            int di = 0x8A + ((x+40) + ((239 - y) * 400)) * 2;
+    unsigned char* png;
+    size_t pngsize;
 
-            tempbuf[di++] = framebuf[si++];
-            tempbuf[di++] = framebuf[si++];
-        }
-    }
-    */
+    unsigned error = lodepng_encode24(&png, &pngsize, tempbuf, 400, 240);
+    if(!error) lodepng_save_file(png, pngsize, path);
 
-    fwrite(tempbuf, sizeof(char), 0x8A + bitmapsize, pFile);
-    fclose(pFile);
-
+    free (png);
     linearFree(tempbuf);
     return true;
 }

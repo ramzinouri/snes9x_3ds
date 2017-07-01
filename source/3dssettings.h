@@ -50,4 +50,6 @@ typedef struct
                                             //   0 - Disabled
                                             //   1 - Enabled
 
+    int     DisableBorder;                  // Disable Border
+
 } S9xSettings3DS;

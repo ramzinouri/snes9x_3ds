@@ -217,6 +217,7 @@ SMenuItem optionMenu[] = {
     MENU_MAKE_PICKER    (11000, "  Screen Stretch", "How would you like the final screen to appear?", optionsForStretch, DIALOGCOLOR_CYAN),
     MENU_MAKE_PICKER    (18000, "  Font", "The font used for the user interface.", optionsForFont, DIALOGCOLOR_CYAN),
     MENU_MAKE_CHECKBOX  (15001, "  Hide text in bottom screen", 0),
+    MENU_MAKE_CHECKBOX  (15002, "  Disable Border", 0),
     MENU_MAKE_DISABLED  (""),
     MENU_MAKE_CHECKBOX  (19100, "  Automatically save state on exit and load state on start", 0),
     MENU_MAKE_DISABLED  (""),
@@ -468,6 +469,7 @@ bool settingsReadWriteFullListGlobal(bool writeMode)
 
     config3dsReadWriteInt32("ScreenStretch=%d\n", &settings3DS.ScreenStretch, 0, 7);
     config3dsReadWriteInt32("HideUnnecessaryBottomScrText=%d\n", &settings3DS.HideUnnecessaryBottomScrText, 0, 1);
+    config3dsReadWriteInt32("DisableBorder=%d\n", &settings3DS.DisableBorder, 0, 1);
     config3dsReadWriteInt32("Font=%d\n", &settings3DS.Font, 0, 2);
 
     // Fixes the bug where we have spaces in the directory name
@@ -658,6 +660,7 @@ bool menuCopySettings(bool copyMenuToSettings)
     UPDATE_SETTINGS(settings3DS.Font, 1, 18000);
     UPDATE_SETTINGS(settings3DS.ScreenStretch, 1, 11000);
     UPDATE_SETTINGS(settings3DS.HideUnnecessaryBottomScrText, 1, 15001);
+    UPDATE_SETTINGS(settings3DS.DisableBorder, 1, 15002);
     UPDATE_SETTINGS(settings3DS.MaxFrameSkips, 1, 10000);
     UPDATE_SETTINGS(settings3DS.ForceFrameRate, 1, 12000);
     UPDATE_SETTINGS(settings3DS.Turbo[0], 1, 13000);
@@ -987,7 +990,7 @@ void menuPause()
             int i = 1;
             while (i <= 999)
             {
-                snprintf(ext, 255, ".b%03d.bmp", i);
+                snprintf(ext, 255, ".%03d.png", i);
                 path = S9xGetFilename(ext);
                 if (!IsFileExists(path))
                     break;
