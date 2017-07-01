@@ -201,7 +201,7 @@ bool impl3dsInitializeCore()
     snesMainScreenTarget = gpu3dsCreateTextureInVRAM(256, 256, GPU_RGBA8);      // 0.250 MB
     snesSubScreenTarget = gpu3dsCreateTextureInVRAM(256, 256, GPU_RGBA8);       // 0.250 MB
 
-	if(!impl3dsLoadBorderTexture("./snes9x_3ds_Border.png"))
+	if(!impl3dsLoadBorderTexture("/3ds/data/snes9x_3ds/Border.png"))
 		borderTexture=gpu3dsCreateTextureInVRAM(400, 240, GPU_RGBA8);
 
     // Depth texture for the sub / main screens.

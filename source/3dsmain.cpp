@@ -51,6 +51,16 @@ char *romFileName = 0;
 char romFileNameFullPath[_MAX_PATH];
 char romFileNameLastSelected[_MAX_PATH];
 
+//----------------------------------------------------------------------
+// Checks if file exists.
+//----------------------------------------------------------------------
+bool IsFileExists(const char * filename) {
+    if (FILE * file = fopen(filename, "r")) {
+        fclose(file);
+        return true;
+    }
+    return false;
+}
 
 
 
@@ -61,8 +71,11 @@ void clearTopScreenWithLogo()
 {
 	unsigned char* image;
 	unsigned width, height;
-
-    int error = lodepng_decode32_file(&image, &width, &height, "romfs:/snes9x_3ds_top.png");
+    int error;
+    if(IsFileExists("/3ds/data/snes9x_3ds/Top.png"))
+        error = lodepng_decode32_file(&image, &width, &height, "/3ds/data/snes9x_3ds/Top.png");
+    else
+        error = lodepng_decode32_file(&image, &width, &height, "romfs:/snes9x_3ds_top.png");
 
     if (!error && width == 400 && height == 240)
     {
@@ -460,7 +473,7 @@ bool settingsReadWriteFullListByGame(bool writeMode)
 //----------------------------------------------------------------------
 bool settingsReadWriteFullListGlobal(bool writeMode)
 {
-    bool success = config3dsOpenFile("./snes9x_3ds.cfg", writeMode);
+    bool success = config3dsOpenFile("/3ds/data/snes9x_3ds/config.cfg", writeMode);
     if (!success)
         return false;
     
@@ -795,18 +808,6 @@ void menuSelectFile(void)
     menu3dsHideMenu();
 
     //emulatorLoadRom();
-}
-
-
-//----------------------------------------------------------------------
-// Checks if file exists.
-//----------------------------------------------------------------------
-bool IsFileExists(const char * filename) {
-    if (FILE * file = fopen(filename, "r")) {
-        fclose(file);
-        return true;
-    }
-    return false;
 }
 
 

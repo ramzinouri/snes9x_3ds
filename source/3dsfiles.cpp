@@ -22,6 +22,9 @@ static char currentDir[_MAX_PATH] = "";
 //----------------------------------------------------------------------
 void file3dsInitialize(void)
 {
+    mkdir("/3ds",0777);
+    mkdir("/3ds/data",0777);
+    mkdir("/3ds/data/snes9x_3ds",0777);
     getcwd(currentDir, _MAX_PATH);
 }
 

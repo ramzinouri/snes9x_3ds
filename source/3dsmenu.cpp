@@ -430,7 +430,7 @@ void menu3dsDrawDialogProgressBar(float per)
     menu3dsDrawEverything();
 
     char text[15];
-    snprintf(text, 14, "%.2f %%", per);
+    snprintf(text, 14, "%u %%", (unsigned char)per);
     aptMainLoop();
     int y = 80;
 
