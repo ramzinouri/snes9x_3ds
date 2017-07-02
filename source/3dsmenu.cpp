@@ -10,7 +10,11 @@
 #include "3dsmenu.h"
 #include "3dsgpu.h"
 #include "3dsui.h"
+#include "3dsthemes.h"
+#include "3dssettings.h"
 #include "lodepng.h"
+
+
 
 #define CONSOLE_WIDTH           40
 #define MENU_HEIGHT             (14)
@@ -124,7 +128,7 @@ void menu3dsDrawItems(
     }
 
     int line = 0;
-    int color = 0xffffff;
+    int color = 0x000000;
 
     // Draw all the individual items
     //
@@ -141,9 +145,7 @@ void menu3dsDrawItems(
         // Draw the selected background 
         //
         if (currentTab->SelectedItemIndex == i)
-        {
             ui3dsDrawRect(0, y, 320, y + 14, selectedItemBackColor);
-        }
         
         if (currentTab->MenuItems[i].Type == MENUITEM_HEADER1)
         {
@@ -270,20 +272,20 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
 
     // Draw the flat background
     //
-    ui3dsDrawRect(0, 0, 320, 24, 0x1976D2);
-    ui3dsDrawRect(0, 24, 320, 220, 0xFFFFFF);
-    ui3dsDrawRect(0, 220, 320, 240, 0x1976D2);
+    ui3dsDrawRect(0, 0, 320, 24, Themes[settings3DS.Theme].menuBGColor);
+    ui3dsDrawRect(0, 24, 320, 220, Themes[settings3DS.Theme].menuColor);
+    ui3dsDrawRect(0, 220, 320, 240, Themes[settings3DS.Theme].menuBGColor);
 
     // Draw the tabs at the top
     //
     for (int i = 0; i < menuTabCount; i++)
     {
-        int color = i == currentMenuTab ? 0xFFFFFF : 0x90CAF9 ;
+        int color = i == currentMenuTab ? Themes[settings3DS.Theme].menuTxtColor : Themes[settings3DS.Theme].menuTabTxtColor ;
         ui3dsDrawStringWithNoWrapping(i * 75 + 10, 6, (i+1)*75 + 10, 21, color, HALIGN_CENTER, 
             menuTab[i].Title);
 
         if (i == currentMenuTab)
-            ui3dsDrawRect(i * 75 + 10, 21, (i+1)*75 + 10, 24, 0xFFFFFF);
+            ui3dsDrawRect(i * 75 + 10, 21, (i+1)*75 + 10, 24, Themes[settings3DS.Theme].selectedTabColor);
     }
 
     // Shadows
@@ -291,30 +293,30 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     //ui3dsDrawRect(0, 24, 320, 25, 0xcccccc);
     //ui3dsDrawRect(0, 25, 320, 27, 0xeeeeee);
 
-    ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, 0xFFFFFF, HALIGN_LEFT,
-        "A:Select  B:Back");
+    ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, Themes[settings3DS.Theme].menuTxtColor, HALIGN_LEFT,
+        "\xF0:Select  \xF1:Back");
     //ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, 0xFFFFFF, HALIGN_RIGHT,
     //    "SNES9x for 3DS " SNES9X_VERSION);
     char verText[64];
     snprintf(verText, 64, "SNES9X for 3DS %s", REVISION);
-    ui3dsDrawStringWithNoWrapping(10, 223, 275, 240, 0xFFFFFF, HALIGN_RIGHT,verText);
+    ui3dsDrawStringWithNoWrapping(10, 223, 275, 240, Themes[settings3DS.Theme].menuTxtColor, HALIGN_RIGHT,verText);
 
     //battery display
-    ui3dsDrawRect(287, 223, 315, 236, 0xFFFFFF, 1.0f);
-    ui3dsDrawRect(284, 226, 287, 233, 0xFFFFFF, 1.0f);
-    ui3dsDrawRect(289, 224, 313, 235, 0x1976D2, 1.0f);
-    ui3dsDrawRect(291, 226, 311, 233, 0xFFFFFF, 0.5f);
+    ui3dsDrawRect(287, 223, 315, 236, Themes[settings3DS.Theme].menuTxtColor, 1.0f);
+    ui3dsDrawRect(284, 226, 287, 233, Themes[settings3DS.Theme].menuTxtColor, 1.0f);
+    ui3dsDrawRect(289, 224, 313, 235, Themes[settings3DS.Theme].menuBGColor, 1.0f);
+    ui3dsDrawRect(291, 226, 311, 233, Themes[settings3DS.Theme].menuTxtColor, 0.5f);
     
     ptmuInit();
     
     u8 batteryChargeState = 0;
     u8 batteryLevel = 0;
     if(R_SUCCEEDED(PTMU_GetBatteryChargeState(&batteryChargeState)) && batteryChargeState) {
-        ui3dsDrawRect(291, 226, 311, 233, 0xFF9900, 1.0f);
+        ui3dsDrawRect(291, 226, 311, 233,Themes[settings3DS.Theme].batteryChargeColor, 1.0f);
     } else if(R_SUCCEEDED(PTMU_GetBatteryLevel(&batteryLevel))) {
-        ui3dsDrawRect(311-5*(batteryLevel-1), 226, 311, 233, 0xFFFFFF, 1.0f);
+        ui3dsDrawRect(311-5*(batteryLevel-1), 226, 311, 233, Themes[settings3DS.Theme].menuTxtColor, 1.0f);
     } else {
-        ui3dsDrawRect(311, 226, 311, 233, 0xFFFFFF, 1.0f);
+        ui3dsDrawRect(311, 226, 311, 233, Themes[settings3DS.Theme].menuTxtColor, 1.0f);
     }
  
     ptmuExit();
@@ -329,16 +331,16 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     {
         menu3dsDrawItems(
             currentTab, 20, menuStartY, maxItems,
-            0x333333,       // selectedItemBackColor
-            0xffffff,       // selectedItemTextColor
-            0x777777,       // selectedItemDescriptionTextColor
+            Themes[settings3DS.Theme].selectedItemBackColor,       // selectedItemBackColor
+            Themes[settings3DS.Theme].selectedItemTextColor,       // selectedItemTextColor
+            Themes[settings3DS.Theme].selectedItemDescriptionTextColor,       // selectedItemDescriptionTextColor
 
-            0x000000,       // checkedItemTextColor
-            0x333333,       // normalItemTextColor      
-            0x777777,       // normalItemDescriptionTextColor      
-            0x888888,       // disabledItemTextColor
-            0x1E88E5,       // headerItemTextColor
-            0x1E88E5);      // subtitleTextColor
+            Themes[settings3DS.Theme].checkedItemTextColor,       // checkedItemTextColor
+            Themes[settings3DS.Theme].normalItemTextColor,       // normalItemTextColor      
+            Themes[settings3DS.Theme].normalItemDescriptionTextColor,       // normalItemDescriptionTextColor      
+            Themes[settings3DS.Theme].disabledItemTextColor,       // disabledItemTextColor
+            Themes[settings3DS.Theme].headerItemTextColor,       // headerItemTextColor
+            Themes[settings3DS.Theme].subtitleTextColor);      // subtitleTextColor
     }
     else
     {
@@ -350,17 +352,17 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
         
          menu3dsDrawItems(
             currentTab, 20, menuStartY, maxItems,
-            ui3dsApplyAlphaToColor(0x333333, alpha) + white,
-            ui3dsApplyAlphaToColor(0xffffff, alpha) + white,       // selectedItemTextColor
-            ui3dsApplyAlphaToColor(0x777777, alpha) + white,       // selectedItemDescriptionTextColor
+            ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].selectedItemBackColor, alpha) + white,       // selectedItemBackColor
+            ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].selectedItemTextColor, alpha) + white,       // selectedItemTextColor
+            ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].selectedItemDescriptionTextColor, alpha) + white,       // selectedItemDescriptionTextColor
 
-            ui3dsApplyAlphaToColor(0x000000, alpha) + white,       // checkedItemTextColor
-            ui3dsApplyAlphaToColor(0x333333, alpha) + white,       // normalItemTextColor      
-            ui3dsApplyAlphaToColor(0x777777, alpha) + white,       // normalItemDescriptionTextColor      
-            ui3dsApplyAlphaToColor(0x888888, alpha) + white,       // disabledItemTextColor
-            ui3dsApplyAlphaToColor(0x1E88E5, alpha) + white,       // headerItemTextColor
-            ui3dsApplyAlphaToColor(0x1E88E5, alpha) + white);      // subtitleTextColor       
-        //svcSleepThread((long)(1000000.0f * 1000.0f));
+            ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].checkedItemTextColor, alpha) + white,       // checkedItemTextColor
+            ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].normalItemTextColor, alpha) + white,       // normalItemTextColor      
+            ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].normalItemDescriptionTextColor, alpha) + white,       // normalItemDescriptionTextColor      
+            ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].disabledItemTextColor, alpha) + white,       // disabledItemTextColor
+            ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].headerItemTextColor, alpha) + white,       // headerItemTextColor
+            ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].subtitleTextColor, alpha) + white);      // subtitleTextColor       
+
     }
 
       
@@ -375,20 +377,12 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
 }
 
 
-
-
-int dialogBackColor = 0xEC407A;
-int dialogTextColor = 0xffffff;
-int dialogItemTextColor = 0xffffff;
-int dialogSelectedItemTextColor = 0xffffff;
-int dialogSelectedItemBackColor = 0x000000;
-
 void menu3dsDrawDialog()
 {
     // Dialog's Background
-    int dialogBackColor2 = ui3dsApplyAlphaToColor(dialogBackColor, 0.9f);
+    int dialogBackColor2 = ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogBackColor, 0.9f);
     ui3dsDrawRect(0, 0, 320, 75, dialogBackColor2);
-    ui3dsDrawRect(0, 75, 320, 160, dialogBackColor);
+    ui3dsDrawRect(0, 75, 320, 160, Themes[settings3DS.Theme].dialogBackColor);
 
     // Left trim the dialog title
     int len = strlen(dialogTab.Title);
@@ -402,25 +396,25 @@ void menu3dsDrawDialog()
 
     // Draw the dialog's title and descriptive text
     int dialogTitleTextColor = 
-        ui3dsApplyAlphaToColor(dialogBackColor, 0.5f) + 
-        ui3dsApplyAlphaToColor(dialogTextColor, 0.5f);
+        ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogBackColor, 0.5f) + 
+        ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogTextColor, 0.5f);
     ui3dsDrawStringWithNoWrapping(30, 10, 290, 25, dialogTitleTextColor, HALIGN_LEFT, &dialogTab.Title[startChar]);
-    ui3dsDrawStringWithWrapping(30, 30, 290, 70, dialogTextColor, HALIGN_LEFT, dialogTab.DialogText);
+    ui3dsDrawStringWithWrapping(30, 30, 290, 70, Themes[settings3DS.Theme].dialogTextColor, HALIGN_LEFT, dialogTab.DialogText);
 
     // Draw the selectable items.
     int dialogItemDescriptionTextColor = dialogTitleTextColor;
     menu3dsDrawItems(
         &dialogTab, 30, 80, DIALOG_HEIGHT,
-        dialogSelectedItemBackColor,        // selectedItemBackColor
-        dialogSelectedItemTextColor,        // selectedItemTextColor
+        Themes[settings3DS.Theme].dialogSelectedItemBackColor,        // selectedItemBackColor
+        Themes[settings3DS.Theme].dialogSelectedItemTextColor,        // selectedItemTextColor
         dialogItemDescriptionTextColor,     // selectedItemDescriptionColor
 
-        dialogItemTextColor,                // checkedItemTextColor
-        dialogItemTextColor,                // normalItemTextColor
+        Themes[settings3DS.Theme].dialogItemTextColor,                // checkedItemTextColor
+        Themes[settings3DS.Theme].dialogItemTextColor,                // normalItemTextColor
         dialogItemDescriptionTextColor,     // normalItemDescriptionTextColor
         dialogItemDescriptionTextColor,     // disabledItemTextColor
-        dialogItemTextColor,                // headerItemTextColor
-        dialogItemTextColor                 // subtitleTextColor
+        Themes[settings3DS.Theme].dialogItemTextColor,                // headerItemTextColor
+        Themes[settings3DS.Theme].dialogItemTextColor                 // subtitleTextColor
         );
 }
 
@@ -434,15 +428,15 @@ void menu3dsDrawDialogProgressBar(float per)
     aptMainLoop();
     int y = 80;
 
-    int dialogBackColor2 = ui3dsApplyAlphaToColor(0xFFFFFF, 0.5f);
-    ui3dsDrawRect(30, 100+y, 290, 120+y, 0xFFFFFF);
-    ui3dsDrawRect(31, 101+y, 289, 119+y, dialogBackColor);
+    int dialogBackColor2 = ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].progressBarColor, 0.5f);
+    ui3dsDrawRect(30, 100+y, 290, 120+y, Themes[settings3DS.Theme].progressBarColor);
+    ui3dsDrawRect(31, 101+y, 289, 119+y, Themes[settings3DS.Theme].dialogBackColor);
     ui3dsDrawRect(33, 103+y, 287, 117+y, dialogBackColor2);
 
-    ui3dsDrawRect(33, 103+y, 33+(254*per)/100, 117+y, 0xFFFFFF);
+    ui3dsDrawRect(33, 103+y, 33+(254*per)/100, 117+y, Themes[settings3DS.Theme].progressBarColor);
 
-    ui3dsDrawRect(30, 120+y, 290, 135+y, dialogBackColor);
-    ui3dsDrawStringWithNoWrapping(30, 120+y, 290, 135+y, 0xFFFFFF, HALIGN_LEFT, text);
+    ui3dsDrawRect(30, 120+y, 290, 135+y, Themes[settings3DS.Theme].dialogBackColor);
+    ui3dsDrawStringWithNoWrapping(30, 120+y, 290, 135+y, Themes[settings3DS.Theme].dialogTextColor, HALIGN_LEFT, text);
 
  
     menu3dsSwapBuffersAndWaitForVBlank();
@@ -895,7 +889,7 @@ int menu3dsShowDialog(char *title, char *dialogText, int newDialogBackColor, SMe
 {
     SMenuTab *currentTab = &dialogTab;
 
-    dialogBackColor = newDialogBackColor;
+    Themes[settings3DS.Theme].dialogBackColor = newDialogBackColor;
 
     currentTab->Title = title;
     currentTab->DialogText = dialogText;
@@ -948,7 +942,7 @@ int menu3dsShowDialogProgress(char *title, char *dialogText, int newDialogBackCo
     lastProgress=0;
     SMenuTab *currentTab = &dialogTab;
 
-    dialogBackColor = newDialogBackColor;
+    Themes[settings3DS.Theme].dialogBackColor = newDialogBackColor;
 
     currentTab->Title = title;
     currentTab->DialogText = dialogText;

@@ -36,6 +36,8 @@
 #include "3dsimpl_gpu.h"
 
 #include "lodepng.h"
+#include "3dsthemes.h"
+
 
 S9xSettings3DS settings3DS;
 
@@ -91,8 +93,15 @@ void clearTopScreenWithLogo()
                     uint32 g = *src++;
                     uint32 b = *src++;
                     uint32 a = *src++;
-
-                    uint32 c = ((r << 24) | (g << 16) | (b << 8) | 0xff);
+        
+                    unsigned int alpha = a + 1;
+                    unsigned int inv_alpha = 256 - a;
+                    uint8 *topc = (uint8 *)&Themes[settings3DS.Theme].topBGColor;
+                    unsigned char rR = (unsigned char)((alpha * r + inv_alpha * topc[2]) >> 8);
+                    unsigned char rG = (unsigned char)((alpha * g + inv_alpha * topc[1]) >> 8);
+                    unsigned char rB = (unsigned char)((alpha * b + inv_alpha * topc[0]) >> 8);
+                    
+                    uint32 c = ((rR << 24) | (rG << 16) | (rB << 8) | 0xFF);
                     fb[x * 240 + (239 - y)] = c;
                 }
             gfxSwapBuffers();
@@ -177,6 +186,8 @@ SMenuItem emulatorMenu[] = {
     { 6001,          "  Exit           ", -1, 0, 0, 0 }*/
     };
 
+SMenuItem optionsForTheme[TOTALTHEMECOUNT];
+
 SMenuItem optionsForFont[] = {
     MENU_MAKE_DIALOG_ACTION (0, "Tempesta",               ""),
     MENU_MAKE_DIALOG_ACTION (1, "Ronda",               ""),
@@ -227,8 +238,9 @@ SMenuItem emulatorNewMenu[] = {
 
 SMenuItem optionMenu[] = {
     MENU_MAKE_HEADER1   ("GLOBAL SETTINGS"),
-    MENU_MAKE_PICKER    (11000, "  Screen Stretch", "How would you like the final screen to appear?", optionsForStretch, DIALOGCOLOR_CYAN),
-    MENU_MAKE_PICKER    (18000, "  Font", "The font used for the user interface.", optionsForFont, DIALOGCOLOR_CYAN),
+    MENU_MAKE_PICKER    (11000, "  Screen Stretch", "How would you like the final screen to appear?", optionsForStretch, Themes[settings3DS.Theme].dialogColor),
+    MENU_MAKE_PICKER    (18000, "  Font", "The font used for the user interface.", optionsForFont, Themes[settings3DS.Theme].dialogColor),
+    MENU_MAKE_PICKER    (18500, "  Theme", "The Theme used for the user interface.", optionsForTheme, Themes[settings3DS.Theme].dialogColor),
     MENU_MAKE_CHECKBOX  (15001, "  Hide text in bottom screen", 0),
     MENU_MAKE_CHECKBOX  (15002, "  Disable Border", 0),
     MENU_MAKE_DISABLED  (""),
@@ -236,9 +248,9 @@ SMenuItem optionMenu[] = {
     MENU_MAKE_DISABLED  (""),
     MENU_MAKE_HEADER1   ("GAME-SPECIFIC SETTINGS"),
     MENU_MAKE_HEADER2   ("Graphics"),
-    MENU_MAKE_PICKER    (10000, "  Frameskip", "Try changing this if the game runs slow. Skipping frames help it run faster but less smooth.", optionsForFrameskip, DIALOGCOLOR_CYAN),
-    MENU_MAKE_PICKER    (12000, "  Framerate", "Some games run at 50 or 60 FPS by default. Override if required.", optionsForFrameRate, DIALOGCOLOR_CYAN),
-    MENU_MAKE_PICKER    (16000, "  In-Frame Palette Changes", "Try changing this if some colours in the game look off.", optionsForInFramePaletteChanges, DIALOGCOLOR_CYAN),
+    MENU_MAKE_PICKER    (10000, "  Frameskip", "Try changing this if the game runs slow. Skipping frames help it run faster but less smooth.", optionsForFrameskip, Themes[settings3DS.Theme].dialogColor),
+    MENU_MAKE_PICKER    (12000, "  Framerate", "Some games run at 50 or 60 FPS by default. Override if required.", optionsForFrameRate, Themes[settings3DS.Theme].dialogColor),
+    MENU_MAKE_PICKER    (16000, "  In-Frame Palette Changes", "Try changing this if some colours in the game look off.", optionsForInFramePaletteChanges, Themes[settings3DS.Theme].dialogColor),
     MENU_MAKE_DISABLED  (""),
     MENU_MAKE_HEADER2   ("Audio"),
     MENU_MAKE_GAUGE     (14000, "  Volume Amplification", 0, 8, 4),
@@ -252,7 +264,7 @@ SMenuItem optionMenu[] = {
     MENU_MAKE_CHECKBOX  (13005, "  Button R", 0),
     MENU_MAKE_DISABLED  (""),
     MENU_MAKE_HEADER2   ("SRAM (Save Data)"),
-    MENU_MAKE_PICKER    (17000, "  SRAM Auto-Save Delay", "Try setting to 60 seconds or Disabled this if the game saves SRAM (Save Data) to SD card too frequently.", optionsForAutoSaveSRAMDelay, DIALOGCOLOR_CYAN),
+    MENU_MAKE_PICKER    (17000, "  SRAM Auto-Save Delay", "Try setting to 60 seconds or Disabled this if the game saves SRAM (Save Data) to SD card too frequently.", optionsForAutoSaveSRAMDelay, Themes[settings3DS.Theme].dialogColor),
     MENU_MAKE_CHECKBOX  (19000, "  Force SRAM Write on Pause", 0)
 
     };
@@ -484,6 +496,7 @@ bool settingsReadWriteFullListGlobal(bool writeMode)
     config3dsReadWriteInt32("HideUnnecessaryBottomScrText=%d\n", &settings3DS.HideUnnecessaryBottomScrText, 0, 1);
     config3dsReadWriteInt32("DisableBorder=%d\n", &settings3DS.DisableBorder, 0, 1);
     config3dsReadWriteInt32("Font=%d\n", &settings3DS.Font, 0, 2);
+    config3dsReadWriteInt32("Theme=%d\n", &settings3DS.Theme, 0, TOTALTHEMECOUNT-1);
 
     // Fixes the bug where we have spaces in the directory name
     config3dsReadWriteString("Dir=%s\n", "Dir=%1000[^\n]s\n", file3dsGetCurrentDir());
@@ -504,7 +517,7 @@ bool settingsSave(bool includeGameSettings = true)
 {
     consoleClear();
     ui3dsDrawRect(50, 140, 270, 154, 0x000000);
-    ui3dsDrawStringWithNoWrapping(50, 140, 270, 154, 0x3f7fff, HALIGN_CENTER, "Saving settings to SD card...");
+    ui3dsDrawStringWithNoWrapping(50, 140, 270, 154, Themes[settings3DS.Theme].msgSaveColor, HALIGN_CENTER, "Saving settings to SD card...");
 
     if (includeGameSettings)
         settingsReadWriteFullListByGame(true);
@@ -582,8 +595,7 @@ void menuSetupCheats();  // forward declaration
 bool emulatorLoadRom()
 {
     snprintf(romFileNameFullPath, _MAX_PATH, "%s%s", file3dsGetCurrentDir(), romFileName);
-    //menu3dsShowDialog("Loading ROM...", romFileNameFullPath, DIALOGCOLOR_CYAN, NULL, 0);
-    menu3dsShowDialogProgress("Loading ROM...", romFileNameFullPath,DIALOGCOLOR_CYAN);
+    menu3dsShowDialogProgress("Loading ROM...", romFileNameFullPath,Themes[settings3DS.Theme].dialogColor);
     bool loaded=impl3dsLoadROM(romFileNameFullPath);
     if(loaded)
     {
@@ -659,7 +671,7 @@ int fileFindLastSelectedFile()
 bool menuCopySettings(bool copyMenuToSettings)
 {
 #define UPDATE_SETTINGS(var, tabIndex, ID)  \
-    if (copyMenuToSettings && (var) != menu3dsGetValueByID(tabIndex, ID)) \
+    if (copyMenuToSettings && (var) != menu3dsGetValueByID(tabIndex, ID || ID==18500)) \
     { \
         var = menu3dsGetValueByID(tabIndex, ID); \
         settingsUpdated = true; \
@@ -671,6 +683,7 @@ bool menuCopySettings(bool copyMenuToSettings)
 
     bool settingsUpdated = false;
     UPDATE_SETTINGS(settings3DS.Font, 1, 18000);
+    UPDATE_SETTINGS(settings3DS.Theme, 1, 18500);
     UPDATE_SETTINGS(settings3DS.ScreenStretch, 1, 11000);
     UPDATE_SETTINGS(settings3DS.HideUnnecessaryBottomScrText, 1, 15001);
     UPDATE_SETTINGS(settings3DS.DisableBorder, 1, 15002);
@@ -783,7 +796,7 @@ void menuSelectFile(void)
                     return;
                 else
                 {
-                    menu3dsShowDialog("Error", "Oops. Unable to open Rom File", DIALOGCOLOR_RED, optionsForOk, sizeof(optionsForOk)/sizeof(SMenuItem));
+                    menu3dsShowDialog("Error", "Oops. Unable to open Rom File", Themes[settings3DS.Theme].dialogColorError, optionsForOk, sizeof(optionsForOk)/sizeof(SMenuItem));
                     menu3dsHideDialog();
                 }
                 selection = -1;
@@ -791,7 +804,7 @@ void menuSelectFile(void)
         }
         else if (selection == 6001)
         {
-            int result = menu3dsShowDialog("Exit",  "Leaving so soon?", DIALOGCOLOR_RED, optionsForNoYes, sizeof(optionsForNoYes) / sizeof(SMenuItem));
+            int result = menu3dsShowDialog("Exit",  "Leaving so soon?", Themes[settings3DS.Theme].dialogColorError, optionsForNoYes, sizeof(optionsForNoYes) / sizeof(SMenuItem));
             menu3dsHideDialog();
 
             if (result == 1)
@@ -817,9 +830,9 @@ void menuSelectFile(void)
 void menuItemChangedCallback(int ID, int value)
 {
     if (ID == 18000)
-    {
         ui3dsSetFont(value);
-    }
+    if (ID == 18500)
+        settings3DS.Theme=value;
 }
 
 
@@ -839,6 +852,10 @@ void menuPause()
 
 
     menu3dsClearMenuTabs();
+
+    for(int i=0;i<TOTALTHEMECOUNT;i++)
+        optionsForTheme[i]=MENU_MAKE_DIALOG_ACTION (i, Themes[i].Name,               "");
+
     menu3dsAddTab("Emulator", emulatorMenu, emulatorMenuCount);
     menu3dsAddTab("Options", optionMenu, optionMenuCount);
     menu3dsAddTab("Cheats", cheatMenu, cheatMenuCount);
@@ -908,13 +925,13 @@ void menuPause()
 
                 if (settings3DS.AutoSavestate)
                 {
-                    menu3dsShowDialog("Save State", "Autosaving...", DIALOGCOLOR_CYAN, NULL, 0);
+                    menu3dsShowDialog("Save State", "Autosaving...", Themes[settings3DS.Theme].dialogColor, NULL, 0);
                     bool result = impl3dsSaveStateAuto();
                     menu3dsHideDialog();
 
                     if (!result)
                     {
-                        int choice = menu3dsShowDialog("Autosave failure", "Automatic savestate writing failed.\nLoad chosen game anyway?", DIALOGCOLOR_RED, optionsForNoYes, sizeof(optionsForNoYes) / sizeof(SMenuItem));
+                        int choice = menu3dsShowDialog("Autosave failure", "Automatic savestate writing failed.\nLoad chosen game anyway?", Themes[settings3DS.Theme].dialogColorError, optionsForNoYes, sizeof(optionsForNoYes) / sizeof(SMenuItem));
                         if (choice != 1)
                             loadRom = false;
                     }
@@ -927,7 +944,7 @@ void menuPause()
                         break;
                     else
                     {
-                        menu3dsShowDialog("Error", "Oops. Unable to open Rom File", DIALOGCOLOR_RED, optionsForOk, sizeof(optionsForOk)/sizeof(SMenuItem));
+                        menu3dsShowDialog("Error", "Oops. Unable to open Rom File", Themes[settings3DS.Theme].dialogColorError, optionsForOk, sizeof(optionsForOk)/sizeof(SMenuItem));
                         menu3dsHideDialog();
                     }
                     loadRomBeforeExit = false;
@@ -940,20 +957,20 @@ void menuPause()
             char text[200];
            
             sprintf(text, "Saving into slot %d...\nThis may take a while", slot);
-            menu3dsShowDialog("Savestates", text, DIALOGCOLOR_CYAN, NULL, 0);
+            menu3dsShowDialog("Savestates", text, Themes[settings3DS.Theme].dialogColor, NULL, 0);
             bool result = impl3dsSaveStateSlot(slot);
             menu3dsHideDialog();
 
             if (result)
             {
                 sprintf(text, "Slot %d save completed.", slot);
-                result = menu3dsShowDialog("Savestates", text, DIALOGCOLOR_GREEN, optionsForOk, sizeof(optionsForOk) / sizeof(SMenuItem));
+                result = menu3dsShowDialog("Savestates", text, Themes[settings3DS.Theme].dialogColorInfo, optionsForOk, sizeof(optionsForOk) / sizeof(SMenuItem));
                 menu3dsHideDialog();
             }
             else
             {
                 sprintf(text, "Oops. Unable to save slot %d!", slot);
-                result = menu3dsShowDialog("Savestates", text, DIALOGCOLOR_RED, optionsForOk, sizeof(optionsForOk) / sizeof(SMenuItem));
+                result = menu3dsShowDialog("Savestates", text, Themes[settings3DS.Theme].dialogColorError, optionsForOk, sizeof(optionsForOk) / sizeof(SMenuItem));
                 menu3dsHideDialog();
             }
 
@@ -974,13 +991,13 @@ void menuPause()
             else
             {
                 sprintf(text, "Oops. Unable to load slot %d!", slot);
-                menu3dsShowDialog("Savestates", text, DIALOGCOLOR_RED, optionsForOk, sizeof(optionsForOk) / sizeof(SMenuItem));
+                menu3dsShowDialog("Savestates", text, Themes[settings3DS.Theme].dialogColorError, optionsForOk, sizeof(optionsForOk) / sizeof(SMenuItem));
                 menu3dsHideDialog();
             }
         }
         else if (selection == 4001)
         {
-            menu3dsShowDialog("Screenshot", "Now taking a screenshot...\nThis may take a while.", DIALOGCOLOR_CYAN, NULL, 0);
+            menu3dsShowDialog("Screenshot", "Now taking a screenshot...\nThis may take a while.", Themes[settings3DS.Theme].dialogColor, NULL, 0);
 
             char ext[256];
             const char *path = NULL;
@@ -1010,18 +1027,18 @@ void menuPause()
             {
                 char text[600];
                 snprintf(text, 600, "Done! File saved to %s", path);
-                menu3dsShowDialog("Screenshot", text, DIALOGCOLOR_GREEN, optionsForOk, sizeof(optionsForOk)/sizeof(SMenuItem));
+                menu3dsShowDialog("Screenshot", text, Themes[settings3DS.Theme].dialogColorInfo, optionsForOk, sizeof(optionsForOk)/sizeof(SMenuItem));
                 menu3dsHideDialog();
             }
             else 
             {
-                menu3dsShowDialog("Screenshot", "Oops. Unable to take screenshot!", DIALOGCOLOR_RED, optionsForOk, sizeof(optionsForOk)/sizeof(SMenuItem));
+                menu3dsShowDialog("Screenshot", "Oops. Unable to take screenshot!", Themes[settings3DS.Theme].dialogColorError, optionsForOk, sizeof(optionsForOk)/sizeof(SMenuItem));
                 menu3dsHideDialog();
             }
         }
         else if (selection == 5001)
         {
-            int result = menu3dsShowDialog("Reset Console", "Are you sure?", DIALOGCOLOR_RED, optionsForNoYes, sizeof(optionsForNoYes) / sizeof(SMenuItem));
+            int result = menu3dsShowDialog("Reset Console", "Are you sure?", Themes[settings3DS.Theme].dialogColorError, optionsForNoYes, sizeof(optionsForNoYes) / sizeof(SMenuItem));
             menu3dsHideDialog();
 
             if (result == 1)
@@ -1036,7 +1053,7 @@ void menuPause()
         }
         else if (selection == 6001)
         {
-            int result = menu3dsShowDialog("Exit",  "Leaving so soon?", DIALOGCOLOR_RED, optionsForNoYes, sizeof(optionsForNoYes) / sizeof(SMenuItem));
+            int result = menu3dsShowDialog("Exit",  "Leaving so soon?", Themes[settings3DS.Theme].dialogColorError, optionsForNoYes, sizeof(optionsForNoYes) / sizeof(SMenuItem));
             if (result == 1)
             {
                 GPU3DS.emulatorState = EMUSTATE_END;
@@ -1268,7 +1285,7 @@ void updateFrameCount()
                 snprintf (frameCountBuffer, 69, "FPS: %2d.%1d \n", fpsmul10 / 10, fpsmul10 % 10);
 
             ui3dsDrawRect(2, 2, 200, 16, 0x000000);
-            ui3dsDrawStringWithNoWrapping(2, 2, 200, 16, 0x7f7f7f, HALIGN_LEFT, frameCountBuffer);
+            ui3dsDrawStringWithNoWrapping(2, 2, 200, 16, Themes[settings3DS.Theme].txtBottomColor, HALIGN_LEFT, frameCountBuffer);
         }
 
         frameCount60 = 60;
@@ -1330,7 +1347,7 @@ void emulatorLoop()
     menu3dsDrawBlackScreen();
     if (settings3DS.HideUnnecessaryBottomScrText == 0)
     {
-        ui3dsDrawStringWithNoWrapping(0, 100, 320, 115, 0x7f7f7f, HALIGN_CENTER, "Touch screen for menu");
+        ui3dsDrawStringWithNoWrapping(0, 100, 320, 115, Themes[settings3DS.Theme].txtBottomColor, HALIGN_CENTER, "Touch screen for menu");
     }
 
     snd3dsStartPlaying();

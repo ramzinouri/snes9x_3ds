@@ -73,8 +73,5 @@ void menu3dsDrawEverything(int menuFrame = 0, int menuItemsFrame = 0, int dialog
 void menu3dsUpdateDialogProgress(int avail_out,int len);
 int menu3dsShowDialogProgress(char *title, char *dialogText, int newDialogBackColor);
 
-#define DIALOGCOLOR_RED     0xEC407A
-#define DIALOGCOLOR_GREEN   0x4CAF50
-#define DIALOGCOLOR_CYAN    0x0097A7
 
 #endif

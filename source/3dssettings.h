@@ -13,6 +13,7 @@ typedef struct
                                             // 0 - Default show FPS and "Touch screen for menu" text, 1 - Hide those text.
 
     int     Font = 0;                       // 0 - Tempesta, 1 - Ronda, 2 - Arial
+    int     Theme = 0;                       // Numbre of Theme selected
     int     ScreenStretch = 0;              // 0 - no stretch, 1 - stretch full, 2 - aspect fit
 
     int     ForceFrameRate = 0;             // 0 - Use ROM's Region, 1 - Force 50 fps, 2 - Force 60 fps
@@ -50,6 +51,8 @@ typedef struct
                                             //   0 - Disabled
                                             //   1 - Enabled
 
-    int     DisableBorder;                  // Disable Border
+    int     DisableBorder=0;                  // Disable Border
 
 } S9xSettings3DS;
+
+extern S9xSettings3DS settings3DS;
