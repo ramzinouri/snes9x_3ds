@@ -98,10 +98,11 @@ typedef struct
 
 extern SGPU3DS GPU3DS;
 
-
+#define EMUSTATE_SELECTMENU     0
 #define EMUSTATE_EMULATE        1
 #define EMUSTATE_PAUSEMENU      2
 #define EMUSTATE_END            3
+
 
 
 

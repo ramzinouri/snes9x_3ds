@@ -144,8 +144,11 @@ void clearTopScreenWithLogo()
 
 
 SMenuItem emulatorMenu[] = {
-    MENU_MAKE_HEADER2   ("Resume"),
+    MENU_MAKE_HEADER2   ("System"),
     MENU_MAKE_ACTION    (1000, "  Resume Game"),
+    MENU_MAKE_ACTION    (5001, "  Reset Console"),
+    MENU_MAKE_ACTION    (5002, "  Close Game"),
+    MENU_MAKE_ACTION    (5003, "  ROM Info"),
     MENU_MAKE_HEADER2   (""),
 
     MENU_MAKE_HEADER2   ("Savestates"),
@@ -161,29 +164,11 @@ SMenuItem emulatorMenu[] = {
     MENU_MAKE_ACTION    (3004, "  Load Slot #4"),
     MENU_MAKE_HEADER2   (""),
 
-    MENU_MAKE_HEADER2   ("Others"),
     MENU_MAKE_ACTION    (4001, "  Take Screenshot"),
-    MENU_MAKE_ACTION    (5001, "  Reset Console"),
+    MENU_MAKE_HEADER2   (""),
+
     MENU_MAKE_ACTION    (6001, "  Exit"),
-    /*
-    { -1         ,   "Resume           ", -1, 0, 0, 0 },
-    { 1000,          "  Resume Game    ", -1, 0, 0, 0 },
-    { -1         ,   NULL,                -1, 0, 0, 0 },
-    { -1         ,   "Savestates       ", -1, 0, 0, 0 },
-    { 2001,          "  Save Slot #1   ", -1, 0, 0, 0 },
-    { 2002,          "  Save Slot #2   ", -1, 0, 0, 0 },
-    { 2003,          "  Save Slot #3   ", -1, 0, 0, 0 },
-    { 2004,          "  Save Slot #4   ", -1, 0, 0, 0 },
-    { -1         ,   NULL,                -1, 0, 0, 0 },
-    { 3001,          "  Load Slot #1   ", -1, 0, 0, 0 },
-    { 3002,          "  Load Slot #2   ", -1, 0, 0, 0 },
-    { 3003,          "  Load Slot #3   ", -1, 0, 0, 0 },
-    { 3004,          "  Load Slot #4   ", -1, 0, 0, 0 },
-    { -1         ,   NULL,                -1, 0, 0, 0 },
-    { -1         ,   "Emulation        ", -1, 0, 0, 0 },
-    { 4001,          "  Take Screenshot", -1, 0, 0, 0 },
-    { 5001,          "  Reset Console  ", -1, 0, 0, 0 },
-    { 6001,          "  Exit           ", -1, 0, 0, 0 }*/
+
     };
 
 SMenuItem optionsForTheme[TOTALTHEMECOUNT];
@@ -236,6 +221,8 @@ SMenuItem emulatorNewMenu[] = {
     MENU_MAKE_ACTION(6001, "  Exit")
     };
 
+
+int globalOptionMenuCount = 8; // where global settings end
 SMenuItem optionMenu[] = {
     MENU_MAKE_HEADER1   ("GLOBAL SETTINGS"),
     MENU_MAKE_PICKER    (11000, "  Screen Stretch", "How would you like the final screen to appear?", optionsForStretch, Themes[settings3DS.Theme].dialogColor),
@@ -515,15 +502,15 @@ bool settingsReadWriteFullListGlobal(bool writeMode)
 //----------------------------------------------------------------------
 bool settingsSave(bool includeGameSettings = true)
 {
-    consoleClear();
-    ui3dsDrawRect(50, 140, 270, 154, 0x000000);
-    ui3dsDrawStringWithNoWrapping(50, 140, 270, 154, Themes[settings3DS.Theme].msgSaveColor, HALIGN_CENTER, "Saving settings to SD card...");
+    //consoleClear();
+    //ui3dsDrawRect(50, 140, 270, 154, 0x000000);
+    //ui3dsDrawStringWithNoWrapping(50, 140, 270, 154, Themes[settings3DS.Theme].msgSaveColor, HALIGN_CENTER, "Saving settings to SD card...");
 
     if (includeGameSettings)
         settingsReadWriteFullListByGame(true);
 
     settingsReadWriteFullListGlobal(true);
-    ui3dsDrawRect(50, 140, 270, 154, 0x000000);
+    //ui3dsDrawRect(50, 140, 270, 154, 0x000000);
 
     return true;
 }
@@ -671,7 +658,7 @@ int fileFindLastSelectedFile()
 bool menuCopySettings(bool copyMenuToSettings)
 {
 #define UPDATE_SETTINGS(var, tabIndex, ID)  \
-    if (copyMenuToSettings && (var) != menu3dsGetValueByID(tabIndex, ID || ID==18500)) \
+    if (copyMenuToSettings && (var != menu3dsGetValueByID(tabIndex, ID))) \
     { \
         var = menu3dsGetValueByID(tabIndex, ID); \
         settingsUpdated = true; \
@@ -682,24 +669,25 @@ bool menuCopySettings(bool copyMenuToSettings)
     }
 
     bool settingsUpdated = false;
-    UPDATE_SETTINGS(settings3DS.Font, 1, 18000);
-    UPDATE_SETTINGS(settings3DS.Theme, 1, 18500);
-    UPDATE_SETTINGS(settings3DS.ScreenStretch, 1, 11000);
-    UPDATE_SETTINGS(settings3DS.HideUnnecessaryBottomScrText, 1, 15001);
-    UPDATE_SETTINGS(settings3DS.DisableBorder, 1, 15002);
-    UPDATE_SETTINGS(settings3DS.MaxFrameSkips, 1, 10000);
-    UPDATE_SETTINGS(settings3DS.ForceFrameRate, 1, 12000);
-    UPDATE_SETTINGS(settings3DS.Turbo[0], 1, 13000);
-    UPDATE_SETTINGS(settings3DS.Turbo[1], 1, 13001);
-    UPDATE_SETTINGS(settings3DS.Turbo[2], 1, 13002);
-    UPDATE_SETTINGS(settings3DS.Turbo[3], 1, 13003);
-    UPDATE_SETTINGS(settings3DS.Turbo[4], 1, 13004);
-    UPDATE_SETTINGS(settings3DS.Turbo[5], 1, 13005);
-    UPDATE_SETTINGS(settings3DS.Volume, 1, 14000);
-    UPDATE_SETTINGS(settings3DS.PaletteFix, 1, 16000);
-    UPDATE_SETTINGS(settings3DS.AutoSavestate, 1, 19100);
-    UPDATE_SETTINGS(settings3DS.SRAMSaveInterval, 1, 17000);
-    UPDATE_SETTINGS(settings3DS.ForceSRAMWriteOnPause, 1, 19000);
+    UPDATE_SETTINGS(settings3DS.Font, 2, 18000);
+    UPDATE_SETTINGS(settings3DS.Theme, 2, 18500);
+    UPDATE_SETTINGS(settings3DS.ScreenStretch, 2, 11000);
+    UPDATE_SETTINGS(settings3DS.HideUnnecessaryBottomScrText, 2, 15001);
+    UPDATE_SETTINGS(settings3DS.DisableBorder, 2, 15002);
+    UPDATE_SETTINGS(settings3DS.AutoSavestate, 2, 19100);
+    UPDATE_SETTINGS(settings3DS.MaxFrameSkips, 2, 10000);
+    UPDATE_SETTINGS(settings3DS.ForceFrameRate, 2, 12000);
+    UPDATE_SETTINGS(settings3DS.Turbo[0], 2, 13000);
+    UPDATE_SETTINGS(settings3DS.Turbo[1], 2, 13001);
+    UPDATE_SETTINGS(settings3DS.Turbo[2], 2, 13002);
+    UPDATE_SETTINGS(settings3DS.Turbo[3], 2, 13003);
+    UPDATE_SETTINGS(settings3DS.Turbo[4], 2, 13004);
+    UPDATE_SETTINGS(settings3DS.Turbo[5], 2, 13005);
+    UPDATE_SETTINGS(settings3DS.Volume, 2, 14000);
+    UPDATE_SETTINGS(settings3DS.PaletteFix, 2, 16000);
+
+    UPDATE_SETTINGS(settings3DS.SRAMSaveInterval, 2, 17000);
+    UPDATE_SETTINGS(settings3DS.ForceSRAMWriteOnPause, 2, 19000);
 
     return settingsUpdated;
 }
@@ -736,6 +724,20 @@ bool menuCopyCheats(bool copyMenuToSettings)
     return cheatsUpdated;
 }
 
+//----------------------------------------------------------------------
+// Callback when a menu item changes
+//----------------------------------------------------------------------
+void menuItemChangedCallback(int ID, int value)
+{
+    if (ID == 18000)
+        ui3dsSetFont(value);
+    if (ID == 18500)
+    {
+        settings3DS.Theme=value;
+        if(GPU3DS.emulatorState==0)
+            clearTopScreenWithLogo();
+    }
+}
 
 //----------------------------------------------------------------------
 // Start up menu.
@@ -743,15 +745,22 @@ bool menuCopyCheats(bool copyMenuToSettings)
 void menuSelectFile(void)
 {
     gfxSetDoubleBuffering(GFX_BOTTOM, true);
-    
+
+    for(int i=0;i<TOTALTHEMECOUNT;i++)
+        optionsForTheme[i]=MENU_MAKE_DIALOG_ACTION (i, Themes[i].Name,               "");
+
+
     emulatorMenuCount = sizeof(emulatorNewMenu) / sizeof(SMenuItem);
-    optionMenuCount = sizeof(optionMenu) / sizeof(SMenuItem);
+
 
     fileGetAllFiles();
     int previousFileID = fileFindLastSelectedFile();
     menu3dsClearMenuTabs();
-    menu3dsAddTab("Emulator", emulatorNewMenu, emulatorMenuCount);
-    menu3dsAddTab("Select ROM", fileMenu, totalRomFileCount);
+    menu3dsAddTab("\xF5 Emulator", emulatorNewMenu, emulatorMenuCount);
+    menu3dsAddTab("\xF4 Select ROM", fileMenu, totalRomFileCount);
+    menu3dsAddTab("\xF2 Options", optionMenu, globalOptionMenuCount);
+
+    menuCopySettings(false);
     menu3dsSetTabSubTitle(0, NULL);
     menu3dsSetTabSubTitle(1, file3dsGetCurrentDir());
     menu3dsSetCurrentMenuTab(1);
@@ -760,14 +769,18 @@ void menuSelectFile(void)
     menu3dsSetTransferGameScreen(false);
 
     bool animateMenu = true;
-    int selection = 0;
+    int selection = -1;
     do
     {
         if (appExiting)
             return;
 
-        selection = menu3dsShowMenu(NULL, animateMenu);
+        selection = menu3dsShowMenu(menuItemChangedCallback, animateMenu);
         animateMenu = false;
+
+        if (menuCopySettings(true))
+            settingsSave(false);
+        settingsUpdateAllSettings(false);
 
         if (selection >= 0 && selection < 1000)
         {
@@ -784,8 +797,10 @@ void menuSelectFile(void)
 
                 fileGetAllFiles();
                 menu3dsClearMenuTabs();
-                menu3dsAddTab("Emulator", emulatorNewMenu, emulatorMenuCount);
-                menu3dsAddTab("Select ROM", fileMenu, totalRomFileCount);
+                menu3dsAddTab("\xF5 Emulator", emulatorNewMenu, emulatorMenuCount);
+                menu3dsAddTab("\xF4 Select ROM", fileMenu, totalRomFileCount);
+                menu3dsAddTab("\xF2 Options", optionMenu, globalOptionMenuCount);
+
                 menu3dsSetCurrentMenuTab(1);
                 menu3dsSetTabSubTitle(1, file3dsGetCurrentDir());
                 selection = -1;
@@ -793,13 +808,12 @@ void menuSelectFile(void)
             else
             {
                 if(emulatorLoadRom())
-                    return;
+                    break;
                 else
                 {
                     menu3dsShowDialog("Error", "Oops. Unable to open Rom File", Themes[settings3DS.Theme].dialogColorError, optionsForOk, sizeof(optionsForOk)/sizeof(SMenuItem));
                     menu3dsHideDialog();
                 }
-                selection = -1;
             }
         }
         else if (selection == 6001)
@@ -814,26 +828,16 @@ void menuSelectFile(void)
             }
         }
 
-        selection = -1;     // Bug fix: Fixes crashing when setting options before any ROMs are loaded.
-    }
-    while (selection == -1);
+
+
+
+    } 
+    while (true);
 
     menu3dsHideMenu();
 
-    //emulatorLoadRom();
 }
 
-
-//----------------------------------------------------------------------
-// Callback when a menu item changes
-//----------------------------------------------------------------------
-void menuItemChangedCallback(int ID, int value)
-{
-    if (ID == 18000)
-        ui3dsSetFont(value);
-    if (ID == 18500)
-        settings3DS.Theme=value;
-}
 
 
 //----------------------------------------------------------------------
@@ -856,10 +860,10 @@ void menuPause()
     for(int i=0;i<TOTALTHEMECOUNT;i++)
         optionsForTheme[i]=MENU_MAKE_DIALOG_ACTION (i, Themes[i].Name,               "");
 
-    menu3dsAddTab("Emulator", emulatorMenu, emulatorMenuCount);
-    menu3dsAddTab("Options", optionMenu, optionMenuCount);
-    menu3dsAddTab("Cheats", cheatMenu, cheatMenuCount);
-    menu3dsAddTab("Select ROM", fileMenu, totalRomFileCount);
+    menu3dsAddTab("\xF5 Emulator", emulatorMenu, emulatorMenuCount);
+    menu3dsAddTab("\xF4 Select ROM", fileMenu, totalRomFileCount);
+    menu3dsAddTab("\xF2 Options", optionMenu, optionMenuCount);
+    menu3dsAddTab("\xF3 Cheats", cheatMenu, cheatMenuCount);
 
     menuCopySettings(false);
     menuCopyCheats(false);
@@ -868,7 +872,7 @@ void menuPause()
     menu3dsSetTabSubTitle(0, NULL);
     menu3dsSetTabSubTitle(1, NULL);
     menu3dsSetTabSubTitle(2, NULL);
-    menu3dsSetTabSubTitle(3, file3dsGetCurrentDir());
+    menu3dsSetTabSubTitle(1, file3dsGetCurrentDir());
     if (previousFileID >= 0)
         menu3dsSetSelectedItemIndexByID(3, previousFileID);
     menu3dsSetCurrentMenuTab(0);
@@ -908,12 +912,12 @@ void menuPause()
 
                 fileGetAllFiles();
                 menu3dsClearMenuTabs();
-                menu3dsAddTab("Emulator", emulatorMenu, emulatorMenuCount);
-                menu3dsAddTab("Options", optionMenu, optionMenuCount);
-                menu3dsAddTab("Cheats", cheatMenu, cheatMenuCount);
-                menu3dsAddTab("Select ROM", fileMenu, totalRomFileCount);
-                menu3dsSetCurrentMenuTab(3);
-                menu3dsSetTabSubTitle(3, file3dsGetCurrentDir());
+                menu3dsAddTab("\xF5 Emulator", emulatorMenu, emulatorMenuCount);
+                menu3dsAddTab("\xF4 Select ROM", fileMenu, totalRomFileCount);
+                menu3dsAddTab("\xF2 Options", optionMenu, optionMenuCount);
+                menu3dsAddTab("\xF3 Cheats", cheatMenu, cheatMenuCount);
+                menu3dsSetCurrentMenuTab(1);
+                menu3dsSetTabSubTitle(1, file3dsGetCurrentDir());
             }
             else
             {
@@ -965,7 +969,9 @@ void menuPause()
             {
                 sprintf(text, "Slot %d save completed.", slot);
                 result = menu3dsShowDialog("Savestates", text, Themes[settings3DS.Theme].dialogColorInfo, optionsForOk, sizeof(optionsForOk) / sizeof(SMenuItem));
-                menu3dsHideDialog();
+                GPU3DS.emulatorState = EMUSTATE_EMULATE;
+                consoleClear();
+                break;
             }
             else
             {
@@ -1050,6 +1056,20 @@ void menuPause()
                 break;
             }
             
+        }
+        else if (selection == 5002)
+        {
+            //Close game
+            GPU3DS.emulatorState = EMUSTATE_SELECTMENU;
+            break;
+        }
+        else if (selection == 5003)
+        {
+            //ROM Info
+            char info[2024];
+            printROMInfo(info);
+            menu3dsShowDialogInfo("ROM Info",info, Themes[settings3DS.Theme].dialogColorInfo);
+            menu3dsHideDialog();
         }
         else if (selection == 6001)
         {
@@ -1347,7 +1367,7 @@ void emulatorLoop()
     menu3dsDrawBlackScreen();
     if (settings3DS.HideUnnecessaryBottomScrText == 0)
     {
-        ui3dsDrawStringWithNoWrapping(0, 100, 320, 115, Themes[settings3DS.Theme].txtBottomColor, HALIGN_CENTER, "Touch screen for menu");
+        ui3dsDrawStringWithNoWrapping(0, 220, 320, 235, Themes[settings3DS.Theme].txtBottomColor, HALIGN_CENTER, "Touch screen for menu");
     }
 
     snd3dsStartPlaying();
@@ -1447,9 +1467,6 @@ void emulatorLoop()
 int main()
 {
     emulatorInitialize();
-    clearTopScreenWithLogo();
-
-    menuSelectFile();
 
     while (true)
     {
@@ -1468,6 +1485,10 @@ int main()
 
             case EMUSTATE_END:
                 goto quit;
+            case EMUSTATE_SELECTMENU:
+                clearTopScreenWithLogo();
+                menuSelectFile();
+                break;
 
         }
 
