@@ -74,5 +74,6 @@ void menu3dsUpdateDialogProgress(int avail_out,int len);
 int menu3dsShowDialogProgress(char *title, char *dialogText, int newDialogBackColor);
 int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor);
 void printROMInfo(char *txt);
+void printAbout(char *txt);
 
 #endif

@@ -166,7 +166,9 @@ SMenuItem emulatorMenu[] = {
 
     MENU_MAKE_ACTION    (4001, "  Take Screenshot"),
     MENU_MAKE_HEADER2   (""),
-
+    MENU_MAKE_HEADER2   ("Help"),
+    MENU_MAKE_ACTION    (6002, "  About"),
+    MENU_MAKE_DISABLED  (""),
     MENU_MAKE_ACTION    (6001, "  Exit"),
 
     };
@@ -218,6 +220,9 @@ SMenuItem optionsForInFramePaletteChanges[] = {
 };
 
 SMenuItem emulatorNewMenu[] = {
+    MENU_MAKE_HEADER2   ("Help"),
+    MENU_MAKE_ACTION(6002, "  About"),
+    MENU_MAKE_DISABLED  (""),
     MENU_MAKE_ACTION(6001, "  Exit")
     };
 
@@ -504,7 +509,7 @@ bool settingsSave(bool includeGameSettings = true)
 {
     //consoleClear();
     //ui3dsDrawRect(50, 140, 270, 154, 0x000000);
-    //ui3dsDrawStringWithNoWrapping(50, 140, 270, 154, Themes[settings3DS.Theme].msgSaveColor, HALIGN_CENTER, "Saving settings to SD card...");
+    //ui3dsDrawStringWithNoWrapping(50, 140, 270, 154, 0xFFFFFF, HALIGN_CENTER, "Saving settings to SD card...");
 
     if (includeGameSettings)
         settingsReadWriteFullListByGame(true);
@@ -816,6 +821,13 @@ void menuSelectFile(void)
                 }
             }
         }
+        else if (selection == 6002)
+        {
+            //About
+            char About[1024];
+            printAbout(About);
+            menu3dsShowDialogInfo("About Snes9x for 3DS",About, Themes[settings3DS.Theme].dialogColorInfo);
+        }
         else if (selection == 6001)
         {
             int result = menu3dsShowDialog("Exit",  "Leaving so soon?", Themes[settings3DS.Theme].dialogColorError, optionsForNoYes, sizeof(optionsForNoYes) / sizeof(SMenuItem));
@@ -1066,10 +1078,16 @@ void menuPause()
         else if (selection == 5003)
         {
             //ROM Info
-            char info[2024];
+            char info[1024];
             printROMInfo(info);
-            menu3dsShowDialogInfo("ROM Info",info, Themes[settings3DS.Theme].dialogColorInfo);
-            menu3dsHideDialog();
+            menu3dsShowDialogInfo("ROM Information",info, Themes[settings3DS.Theme].dialogColorInfo);
+        }
+        else if (selection == 6002)
+        {
+            //About
+            char About[1024];
+            printAbout(About);
+            menu3dsShowDialogInfo("About Snes9x for 3DS",About, Themes[settings3DS.Theme].dialogColorInfo);
         }
         else if (selection == 6001)
         {
@@ -1077,7 +1095,6 @@ void menuPause()
             if (result == 1)
             {
                 GPU3DS.emulatorState = EMUSTATE_END;
-
                 break;
             }
             else

@@ -101,7 +101,7 @@
 #include "soundux.h"
 #include "cheats.h"
 #include "sa1.h"
-#include "netplay.h"
+//#include "netplay.h"
 #include "spc7110.h"
 #include "bsx.h"
 

@@ -767,8 +767,8 @@ void S9xAutoSaveSRAM (void)
     //CPU.AccumulatedAutoSaveTimer = 0;
     CPU.SRAMModified = false;
 
-    ui3dsDrawRect(50, 140, 270, 154, 0x000000);
-    ui3dsDrawStringWithNoWrapping(50, 140, 270, 154, 0x3f7fff, HALIGN_CENTER, "Saving SRAM to SD card...");
+    ui3dsDrawRect(50, 200, 270, 215, 0x000000);
+    ui3dsDrawStringWithNoWrapping(50, 200, 270, 215, 0x3f7fff, HALIGN_CENTER, "Saving SRAM to SD card...");
 
     // Bug fix: Instead of stopping CSND, we generate silence
     // like we did prior to v0.61
@@ -780,7 +780,7 @@ void S9xAutoSaveSRAM (void)
 
 	Memory.SaveSRAM (S9xGetFilename (".srm"));
 
-    ui3dsDrawRect(50, 140, 270, 154, 0x000000);
+    ui3dsDrawRect(50, 200, 270, 215, 0x000000);
 
     // Bug fix: Instead of starting CSND, we continue to mix
     // like we did prior to v0.61

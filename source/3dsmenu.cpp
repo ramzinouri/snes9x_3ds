@@ -273,9 +273,9 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
 
     // Draw the flat background
     //
-    ui3dsDrawRect(0, 0, 320, 24, Themes[settings3DS.Theme].menuBGColor);
-    ui3dsDrawRect(0, 24, 320, 220, Themes[settings3DS.Theme].menuColor);
-    ui3dsDrawRect(0, 220, 320, 240, Themes[settings3DS.Theme].menuBGColor);
+    ui3dsDrawRect(0, 0, 320, 24, Themes[settings3DS.Theme].menuBarColor);
+    ui3dsDrawRect(0, 24, 320, 220, Themes[settings3DS.Theme].menuBackColor);
+    ui3dsDrawRect(0, 220, 320, 240, Themes[settings3DS.Theme].menuBarColor);
 
     // Draw the tabs at the top
     //
@@ -294,18 +294,11 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     //ui3dsDrawRect(0, 24, 320, 25, 0xcccccc);
     //ui3dsDrawRect(0, 25, 320, 27, 0xeeeeee);
 
-    ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, Themes[settings3DS.Theme].menuTxtColor, HALIGN_LEFT,
-        "\xF0:Select  \xF1:Back");
-    //ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, 0xFFFFFF, HALIGN_RIGHT,
-    //    "SNES9x for 3DS " SNES9X_VERSION);
-    char verText[64];
-    snprintf(verText, 64, "SNES9X for 3DS %s", REVISION);
-    ui3dsDrawStringWithNoWrapping(10, 223, 275, 240, Themes[settings3DS.Theme].menuTxtColor, HALIGN_RIGHT,verText);
 
     //battery display
     ui3dsDrawRect(287, 223, 315, 236, Themes[settings3DS.Theme].menuTxtColor, 1.0f);
     ui3dsDrawRect(284, 226, 287, 233, Themes[settings3DS.Theme].menuTxtColor, 1.0f);
-    ui3dsDrawRect(289, 224, 313, 235, Themes[settings3DS.Theme].menuBGColor, 1.0f);
+    ui3dsDrawRect(289, 224, 313, 235, Themes[settings3DS.Theme].menuBarColor, 1.0f);
     ui3dsDrawRect(291, 226, 311, 233, Themes[settings3DS.Theme].menuTxtColor, 0.5f);
     
     ptmuInit();
@@ -316,11 +309,26 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
         ui3dsDrawRect(291, 226, 311, 233,Themes[settings3DS.Theme].batteryChargeColor, 1.0f);
     } else if(R_SUCCEEDED(PTMU_GetBatteryLevel(&batteryLevel))) {
         ui3dsDrawRect(311-5*(batteryLevel-1), 226, 311, 233, Themes[settings3DS.Theme].menuTxtColor, 1.0f);
+
     } else {
         ui3dsDrawRect(311, 226, 311, 233, Themes[settings3DS.Theme].menuTxtColor, 1.0f);
     }
  
     ptmuExit();
+
+
+    ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, Themes[settings3DS.Theme].menuTxtColor, HALIGN_LEFT,
+        "\xF6:Select \xF0:Ok  \xF1:Cancel");
+    //ui3dsDrawStringWithNoWrapping(10, 223, 310, 240, 0xFFFFFF, HALIGN_RIGHT,
+    //    "SNES9x for 3DS " SNES9X_VERSION);
+    char verText[32];
+    if(batteryChargeState!=0)
+        snprintf(verText, 32, "%s \xF7", REVISION);
+    else
+        snprintf(verText, 32, "%s ", REVISION);
+
+    ui3dsDrawStringWithNoWrapping(10, 223, 282, 240, Themes[settings3DS.Theme].menuTxtColor, HALIGN_RIGHT,verText);
+
 
     int line = 0;
     int maxItems = MENU_HEIGHT;
@@ -1026,13 +1034,13 @@ int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor)
             currentTab->FirstItemIndex = currentTab->SelectedItemIndex - DIALOG_HEIGHT + 1;
 
     // fade the dialog fade in
-    //
+
     aptMainLoop();
     menu3dsDrawEverything();
     menu3dsSwapBuffersAndWaitForVBlank();  
-    //ui3dsCopyFromFrameBuffer(savedBuffer);
 
     isDialog = true;
+
     for (int f = 8; f >= 0; f--)
     {
         aptMainLoop();
@@ -1040,7 +1048,6 @@ int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor)
         int y = 60 + f * f * 60 / 32;
 
         ui3dsSetViewport(0, 0, 320, y);
-        //ui3dsBlitToFrameBuffer(savedBuffer, 1.0f - (float)(8 - dialogFrame) / 10);
         ui3dsSetTranslate(0, 0);
         menu3dsDrawMenu(0, 0);
         ui3dsDrawRect(0, 0, 320, y, 0x000000, (float)(8 - f) / 10);
@@ -1091,7 +1098,6 @@ int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor)
         menu3dsSwapBuffersAndWaitForVBlank();  
     }
 
-    //menu3dsMenuSelectItem(NULL);
     for (int i = 0; i < 2; i ++)
     {
         hidScanInput();
@@ -1112,6 +1118,64 @@ int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor)
             break;
     }
 
+    // fade the dialog fade out
+
+    for (int f = 0; f <= 8; f++)
+    {
+        aptMainLoop();
+        
+        int y = 60 + f * f * 60 / 32;
+
+        ui3dsSetViewport(0, 0, 320, y);
+        ui3dsSetTranslate(0, 0);
+        menu3dsDrawMenu(0, 0);
+        ui3dsDrawRect(0, 0, 320, y, 0x000000, (float)(8 - f) / 10);
+
+        ui3dsSetViewport(0, 0, 320, 240);
+        ui3dsSetTranslate(0, y);
+
+        // Dialog's Background
+        int dialogBackColor2 = ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogBackColor, 0.9f);
+        ui3dsDrawRect(0, 0, 320, 28, dialogBackColor2);
+        ui3dsDrawRect(0, 28, 320, 180, Themes[settings3DS.Theme].dialogBackColor);
+
+        // Left trim the dialog title
+        int len = strlen(dialogTab.Title);
+        int startChar = 0;
+        for (int i = 0; i < len; i++)
+            if (dialogTab.Title[i] != ' ')
+            {
+                startChar = i;
+                break;
+         }
+
+    // Draw the dialog's title and descriptive text
+        int dialogTitleTextColor = 
+        ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogBackColor, 0.5f) + 
+        ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogTextColor, 0.5f);
+        ui3dsDrawStringWithNoWrapping(30, 10, 290, 25, dialogTitleTextColor, HALIGN_LEFT, &dialogTab.Title[startChar]);
+        ui3dsDrawStringWithWrapping(30, 30, 290, 150, Themes[settings3DS.Theme].dialogTextColor, HALIGN_LEFT, dialogTab.DialogText);
+
+        // Draw the selectable items.
+        int dialogItemDescriptionTextColor = dialogTitleTextColor;
+        menu3dsDrawItems(
+            &dialogTab, 30, 160, DIALOG_HEIGHT,
+            Themes[settings3DS.Theme].dialogSelectedItemBackColor,        // selectedItemBackColor
+            Themes[settings3DS.Theme].dialogSelectedItemTextColor,        // selectedItemTextColor
+            dialogItemDescriptionTextColor,     // selectedItemDescriptionColor
+
+            Themes[settings3DS.Theme].dialogItemTextColor,                // checkedItemTextColor
+            Themes[settings3DS.Theme].dialogItemTextColor,                // normalItemTextColor
+            dialogItemDescriptionTextColor,     // normalItemDescriptionTextColor
+            dialogItemDescriptionTextColor,     // disabledItemTextColor
+            Themes[settings3DS.Theme].dialogItemTextColor,                // headerItemTextColor
+            Themes[settings3DS.Theme].dialogItemTextColor                 // subtitleTextColor
+            );
+        
+        ui3dsSetTranslate(0, 0);
+        swapBuffer = true;     
+        menu3dsSwapBuffersAndWaitForVBlank();  
+    }
 
     return 0;
 }
@@ -1480,4 +1544,11 @@ void printROMInfo(char *txt)
         case 14:strcat(txt, "Unknown region 14");break;
         default:strcat(txt, "Unknown region 15");break;
     }
+};
+void printAbout(char *txt)
+{
+    sprintf(txt,"Snes9x for 3DS\nVersion: %s\n", REVISION);
+    strcat(txt, "Snes9x for 3DS is a high-compatibility SNES emulator for your Old 3DS / 2DS. It runs many games at full speed (60 fps).\n");
+    strcat(txt, "Home: https://github.com/bubble2k16/snes9x_3ds\n");
+    strcat(txt, "Author: bubble2k16");
 };

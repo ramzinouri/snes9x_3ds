@@ -3,10 +3,10 @@
 
 Theme3ds Themes[]={
      //theme 0
-     { "Default", //Name
+     { "Default theme", //Name
       0x1976D2, //topBGColor
-      0x1976D2, //menuBGColor
-      0xFFFFFF, //menuColor
+      0x1976D2, //menuBarColor
+      0xFFFFFF, //menuBackColor
       0xFFFFFF, //menuTxtColor
       0x90CAF9, //menuTabTxtColor
       0xFFFFFF, //selectedTabColor
@@ -28,7 +28,6 @@ Theme3ds Themes[]={
       0xffffff, //dialogSelectedItemTextColor
       0x000000, //dialogSelectedItemBackColor
       0xFFFFFF, //progressBarColor
-      0x3f7fff, //msgBottomColor
       0x7f7f7f, //txtBottomColor
       0xFF9900}, //batteryChargeColor
 
@@ -58,7 +57,6 @@ Theme3ds Themes[]={
       0xffffff, //dialogSelectedItemTextColor
       0x000000, //dialogSelectedItemBackColor
       0xFFFFFF, //progressBarColor
-      0x3f7fff, //msgBottomColor
       0x707070, //txtBottomColor
       0xba6000}, //batteryChargeColor
 };

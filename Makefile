@@ -43,6 +43,7 @@ BUILD		:=	build
 SOURCES		:=	source
 ROMFS		:=	romfs
 
+RELEASE		:= $(CURDIR)/release
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
@@ -53,7 +54,7 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 CFLAGS	:=	-g -w -O3 -mword-relocations -finline-limit=20000 \
 			-fomit-frame-pointer -ffunction-sections \
 			$(ARCH) -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
-			-DREVISION=\"$(REVISION)\" -DUNZIP_SUPPORT=TRUE
+			-DREVISION=\"$(REVISION)\"
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
 
@@ -106,7 +107,7 @@ CPPFILES	:=	3dsmain.cpp 3dsmenu.cpp 3dsopt.cpp \
 			Snes9x/seta.cpp Snes9x/seta010.cpp Snes9x/seta011.cpp Snes9x/seta018.cpp \
 			Snes9x/snapshot.cpp \
 			Snes9x/cpu.cpp Snes9x/sa1.cpp Snes9x/debug.cpp Snes9x/apudebug.cpp Snes9x/sdd1.cpp Snes9x/tile.cpp Snes9x/srtc.cpp \
-			Snes9x/gfx.cpp Snes9x/gfxhw.cpp Snes9x/memmap.cpp Snes9x/clip.cpp Snes9x/cliphw.cpp \
+			Snes9x/gfx.cpp Snes9x/gfxhw.cpp Snes9x/memmap.cpp Snes9x/cliphw.cpp \
 			Snes9x/dsp1.cpp Snes9x/ppu.cpp Snes9x/ppuvsect.cpp Snes9x/dma.cpp Snes9x/snes9x.cpp Snes9x/data.cpp Snes9x/globals.cpp \
 			
 
@@ -162,7 +163,7 @@ ifeq ($(UNAME_S), Darwin)
 endif
 ifeq ($(UNAME_S), Linux)
 		MAKEROM := ./tools/linux/makerom
-		BANNERTOOL := ./tools/darwin/bannertool
+		BANNERTOOL := ./tools/linux/bannertool
 endif
 ifeq ($(findstring CYGWIN_NT, $(UNAME_S)),CYGWIN_NT)
 	MAKEROM := ./tools/windows/makerom.exe
@@ -175,50 +176,71 @@ endif
 #---------------------------------------------------------------------------------
 
 
-.PHONY: $(BUILD) clean all
+.PHONY: clean all cia 3dsx smdh banner icon prep binary elf release
 
 #---------------------------------------------------------------------------------
-all: $(BUILD) $(OUTPUT).cia $(OUTPUT)/$(TARGET).3dsx
+all: cia 3dsx
 
-$(BUILD):
-	@[ -d $@ ] || mkdir -p $@
+binary: prep
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+
+prep:
+	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
 	@[ -d $(BUILD)/Snes9x ] || mkdir -p $(BUILD)/Snes9x
 	@[ -d $(BUILD)/zlib ] || mkdir -p $(BUILD)/zlib
 	@[ -d $(BUILD)/unzip ] || mkdir -p $(BUILD)/unzip
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-
-#---------------------------------------------------------------------------------
-$(OUTPUT).cia: $(OUTPUT).elf $(ASSETS)/$(TARGET).bnr $(ASSETS)/$(TARGET).icn
-	@mkdir -p "$(@D)"
-	@echo building cia $(notdir $(OUTPUT).cia)
-	$(MAKEROM) -rsf $(ASSETS)/$(TARGET).rsf -target t -exefslogo -major $(VERSION_MAJOR) -minor $(VERSION_MINOR) \
-	-micro $(VERSION_MICRO) -elf $(OUTPUT).elf -icon $(ASSETS)/$(TARGET).icn -banner $(ASSETS)/$(TARGET).bnr \
-	-logo $(ASSETS)/logo.bcma.lz -f cia -o $@
-
-$(OUTPUT)/$(TARGET).3dsx: $(OUTPUT).elf $(OUTPUT)/$(TARGET).smdh
-	@mkdir -p "$(@D)"
-	@echo building $(notdir $@)
-	@3dsxtool $< $@ --smdh=$(OUTPUT)/$(TARGET).smdh --romfs=$(ROMFS) $(_3DSXFLAGS)
-
-$(ASSETS)/$(TARGET).bnr:
-	@mkdir -p "$(@D)"
-	@echo building banner $(notdir $@)
-	@$(BANNERTOOL) makebanner -ci $(ASSETS)/$(TARGET).cgfx -a $(ASSETS)/$(TARGET).wav -o $@
+	@[ -d $(OUTPUTDIR) ] || mkdir -p $(OUTPUTDIR)
+	@[ -d $(OUTPUT) ] || mkdir -p $(OUTPUT)
 	
+cia: elf icon banner
+	@echo Creating cia: [$(OUTPUT).cia]
+	@$(MAKEROM) -rsf $(ASSETS)/$(TARGET).rsf -target t -exefslogo -major $(VERSION_MAJOR) -minor $(VERSION_MINOR) \
+	-micro $(VERSION_MICRO) -elf $(OUTPUT).elf -icon $(ASSETS)/$(TARGET).icn -banner $(ASSETS)/$(TARGET).bnr \
+	-logo $(ASSETS)/logo.bcma.lz -f cia -o $(OUTPUT).cia
+
+3dsx: elf smdh
+	@echo Creating 3dsx: [$(OUTPUT)/$(TARGET).3dsx]
+	@3dsxtool $(OUTPUT).elf $(OUTPUT)/$(TARGET).3dsx --smdh=$(OUTPUT)/$(TARGET).smdh --romfs=$(ROMFS) $(_3DSXFLAGS) 
+
+elf: binary $(OUTPUT).elf
+
+banner: $(ASSETS)/$(TARGET).bnr
+
+$(ASSETS)/$(TARGET).bnr: $(ASSETS)/$(TARGET).cgfx $(ASSETS)/$(TARGET).wav
+	@echo Creating banner: [$@]
+	@$(BANNERTOOL) makebanner -ci $(ASSETS)/$(TARGET).cgfx -a $(ASSETS)/$(TARGET).wav -o $@ > /dev/null
+	
+icon: $(ASSETS)/$(TARGET).icn
+
 $(ASSETS)/$(TARGET).icn: $(ICON)
-	@mkdir -p "$(@D)"
-	@echo building icon $(notdir $@)
+	@echo Creating icon: [$@]
 	@$(BANNERTOOL) makesmdh -s "$(APP_TITLE)" -l "$(APP_TITLE) - $(APP_DESCRIPTION)" -p "$(APP_AUTHOR)" \
 	-i $(ICON) --flags visible,ratingrequired,recordusage --cero 153 --esrb 153 --usk 153 --pegigen 153 \
-	--pegiptr 153 --pegibbfc 153 --cob 153 --grb 153 --cgsrr 153 -o $@ 
+	--pegiptr 153 --pegibbfc 153 --cob 153 --grb 153 --cgsrr 153 -o $@ > /dev/null
+
+smdh: $(OUTPUT)/$(TARGET).smdh
 
 $(OUTPUT)/$(TARGET).smdh: $(ICON)
 	@mkdir -p "$(@D)"
-	@echo building $(notdir $@)
+	@echo Creating smdh: [$@]
 	@smdhtool --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" $(ICON) $@
+
+release: all
+	@rm -fr $(RELEASE)
+	@[ -d $(RELEASE) ] || mkdir -p $(RELEASE)
+	@[ -d $(RELEASE)/3ds ] || mkdir -p $(RELEASE)/3ds
+	@cp $(OUTPUT).cia $(RELEASE)
+	@cp -r $(OUTPUT) $(RELEASE)/3ds
+	@cp $(CURDIR)/README.md $(RELEASE)
+	@cp -r $(CURDIR)/samples $(RELEASE)
+	@echo Creating archive: [$(RELEASE)/$(TARGET)-$(REVISION).zip]
+	@7z a -mx9 $(RELEASE)/$(TARGET)-$(REVISION).zip $(RELEASE)/* > /dev/null
+
+
 #---------------------------------------------------------------------------------
+
 clean:
-	@rm -fr $(BUILD) $(OUTPUTDIR) $(ASSETS)/$(TARGET).bnr $(ASSETS)/$(TARGET).icn
+	@rm -fr $(BUILD) $(OUTPUTDIR) $(RELEASE) $(ASSETS)/$(TARGET).bnr $(ASSETS)/$(TARGET).icn
 	@echo "Cleaned."
 
 #---------------------------------------------------------------------------------
@@ -230,11 +252,8 @@ DEPENDS	:=	$(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 # main targets
 # ---------------------------------------------------------------------------------
-$(OUTPUT).elf:	$(OFILES)
-	@mkdir -p "$(@D)"
-	@echo linking $(notdir $@)
-	@$(LD) $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) -o $@
-	@$(NM) -CSn $@ > $(notdir $*.lst)
+
+$(OUTPUT).elf	:	$(OFILES)
 
 #---------------------------------------------------------------------------------
 # rules for assembling GPU shaders

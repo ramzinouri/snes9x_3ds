@@ -8,8 +8,8 @@ typedef struct
 {
     char *Name;
     uint32 topBGColor;
-    uint32 menuBGColor;
-    uint32 menuColor;
+    uint32 menuBarColor;
+    uint32 menuBackColor;
     uint32 menuTxtColor;
     uint32 menuTabTxtColor;
     uint32 selectedTabColor;
@@ -31,7 +31,6 @@ typedef struct
     uint32 dialogSelectedItemTextColor;
     uint32 dialogSelectedItemBackColor;
     uint32 progressBarColor;
-    uint32 msgSaveColor;
     uint32 txtBottomColor;
     uint32 batteryChargeColor;
 

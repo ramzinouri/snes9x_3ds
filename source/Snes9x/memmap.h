@@ -90,6 +90,8 @@
 #ifndef _memmap_h_
 #define _memmap_h_
 
+#define UNZIP_SUPPORT
+
 #include "snes9x.h"
 
 #ifdef FAST_LSB_WORD_ACCESS
