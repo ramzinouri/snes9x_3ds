@@ -43,7 +43,6 @@ typedef struct
     char    *PickerDescription;
     int     PickerItemCount;
     void    *PickerItems;
-    int     PickerBackColor;
 } SMenuItem;
 
 

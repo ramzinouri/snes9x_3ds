@@ -9,14 +9,14 @@ typedef struct
     char *Name;
     uint32 topBGColor;
     uint32 menuBarColor;
+    uint32 menuBottomBarColor;
     uint32 menuBackColor;
     uint32 menuTxtColor;
-    uint32 menuTabTxtColor;
+    uint32 menuTxtUnselectedColor;
     uint32 selectedTabColor;
     uint32 selectedItemBackColor;
     uint32 selectedItemTextColor;
     uint32 selectedItemDescriptionTextColor;
-    uint32 checkedItemTextColor;
     uint32 normalItemTextColor;
     uint32 normalItemDescriptionTextColor;
     uint32 disabledItemTextColor;
@@ -25,7 +25,7 @@ typedef struct
     uint32 dialogColor;
     uint32 dialogColorInfo;
     uint32 dialogColorError;
-    uint32 dialogBackColor;
+    uint32 dialogColorPicker;
     uint32 dialogTextColor;
     uint32 dialogItemTextColor;
     uint32 dialogSelectedItemTextColor;
@@ -36,9 +36,9 @@ typedef struct
 
 } Theme3ds;
 
+#define TOTALTHEMECOUNT 4
+extern Theme3ds Themes[TOTALTHEMECOUNT];
 
-extern Theme3ds Themes[2];
-#define TOTALTHEMECOUNT 2
 
 
 

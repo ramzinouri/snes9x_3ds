@@ -139,8 +139,8 @@ void clearTopScreenWithLogo()
 #define MENU_MAKE_GAUGE(ID, text, min, max, value) \
     { MENUITEM_GAUGE, ID, text, NULL, value, min, max }
 
-#define MENU_MAKE_PICKER(ID, text, pickerDescription, pickerOptions, backColor) \
-    { MENUITEM_PICKER, ID, text, NULL, 0, 0, 0, pickerDescription, sizeof(pickerOptions)/sizeof(SMenuItem), pickerOptions, backColor }
+#define MENU_MAKE_PICKER(ID, text, pickerDescription, pickerOptions) \
+    { MENUITEM_PICKER, ID, text, NULL, 0, 0, 0, pickerDescription, sizeof(pickerOptions)/sizeof(SMenuItem), pickerOptions }
 
 
 SMenuItem emulatorMenu[] = {
@@ -230,9 +230,9 @@ SMenuItem emulatorNewMenu[] = {
 int globalOptionMenuCount = 8; // where global settings end
 SMenuItem optionMenu[] = {
     MENU_MAKE_HEADER1   ("GLOBAL SETTINGS"),
-    MENU_MAKE_PICKER    (11000, "  Screen Stretch", "How would you like the final screen to appear?", optionsForStretch, Themes[settings3DS.Theme].dialogColor),
-    MENU_MAKE_PICKER    (18000, "  Font", "The font used for the user interface.", optionsForFont, Themes[settings3DS.Theme].dialogColor),
-    MENU_MAKE_PICKER    (18500, "  Theme", "The Theme used for the user interface.", optionsForTheme, Themes[settings3DS.Theme].dialogColor),
+    MENU_MAKE_PICKER    (11000, "  Screen Stretch", "How would you like the final screen to appear?", optionsForStretch),
+    MENU_MAKE_PICKER    (18000, "  Font", "The font used for the user interface.", optionsForFont),
+    MENU_MAKE_PICKER    (18500, "  Color Theme", "The Theme used for the user interface.", optionsForTheme),
     MENU_MAKE_CHECKBOX  (15001, "  Hide text in bottom screen", 0),
     MENU_MAKE_CHECKBOX  (15002, "  Disable Border", 0),
     MENU_MAKE_DISABLED  (""),
@@ -240,9 +240,9 @@ SMenuItem optionMenu[] = {
     MENU_MAKE_DISABLED  (""),
     MENU_MAKE_HEADER1   ("GAME-SPECIFIC SETTINGS"),
     MENU_MAKE_HEADER2   ("Graphics"),
-    MENU_MAKE_PICKER    (10000, "  Frameskip", "Try changing this if the game runs slow. Skipping frames help it run faster but less smooth.", optionsForFrameskip, Themes[settings3DS.Theme].dialogColor),
-    MENU_MAKE_PICKER    (12000, "  Framerate", "Some games run at 50 or 60 FPS by default. Override if required.", optionsForFrameRate, Themes[settings3DS.Theme].dialogColor),
-    MENU_MAKE_PICKER    (16000, "  In-Frame Palette Changes", "Try changing this if some colours in the game look off.", optionsForInFramePaletteChanges, Themes[settings3DS.Theme].dialogColor),
+    MENU_MAKE_PICKER    (10000, "  Frameskip", "Try changing this if the game runs slow. Skipping frames help it run faster but less smooth.", optionsForFrameskip),
+    MENU_MAKE_PICKER    (12000, "  Framerate", "Some games run at 50 or 60 FPS by default. Override if required.", optionsForFrameRate),
+    MENU_MAKE_PICKER    (16000, "  In-Frame Palette Changes", "Try changing this if some colours in the game look off.", optionsForInFramePaletteChanges),
     MENU_MAKE_DISABLED  (""),
     MENU_MAKE_HEADER2   ("Audio"),
     MENU_MAKE_GAUGE     (14000, "  Volume Amplification", 0, 8, 4),
@@ -256,7 +256,7 @@ SMenuItem optionMenu[] = {
     MENU_MAKE_CHECKBOX  (13005, "  Button R", 0),
     MENU_MAKE_DISABLED  (""),
     MENU_MAKE_HEADER2   ("SRAM (Save Data)"),
-    MENU_MAKE_PICKER    (17000, "  SRAM Auto-Save Delay", "Try setting to 60 seconds or Disabled this if the game saves SRAM (Save Data) to SD card too frequently.", optionsForAutoSaveSRAMDelay, Themes[settings3DS.Theme].dialogColor),
+    MENU_MAKE_PICKER    (17000, "  SRAM Auto-Save Delay", "Try setting to 60 seconds or Disabled this if the game saves SRAM (Save Data) to SD card too frequently.", optionsForAutoSaveSRAMDelay),
     MENU_MAKE_CHECKBOX  (19000, "  Force SRAM Write on Pause", 0)
 
     };

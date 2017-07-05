@@ -48,7 +48,7 @@ bool                transferGameScreen = false;
 int                 transferGameScreenCount = 0;
 
 bool                swapBuffer = true;
-
+int dialogBackColor=0x000000;
 
 //-------------------------------------------------------
 // Sets a flag to tell the menu selector
@@ -105,8 +105,7 @@ void menu3dsDrawItems(
     SMenuTab *currentTab, int horizontalPadding, int menuStartY, int maxItems,
     int selectedItemBackColor,
     int selectedItemTextColor, 
-    int selectedItemDescriptionTextColor, 
-    int checkedItemTextColor, 
+    int selectedItemDescriptionTextColor,  
     int normalItemTextColor,
     int normalItemDescriptionTextColor,
     int disabledItemTextColor, 
@@ -275,13 +274,13 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     //
     ui3dsDrawRect(0, 0, 320, 24, Themes[settings3DS.Theme].menuBarColor);
     ui3dsDrawRect(0, 24, 320, 220, Themes[settings3DS.Theme].menuBackColor);
-    ui3dsDrawRect(0, 220, 320, 240, Themes[settings3DS.Theme].menuBarColor);
+    ui3dsDrawRect(0, 220, 320, 240, Themes[settings3DS.Theme].menuBottomBarColor);
 
     // Draw the tabs at the top
     //
     for (int i = 0; i < menuTabCount; i++)
     {
-        int color = i == currentMenuTab ? Themes[settings3DS.Theme].menuTxtColor : Themes[settings3DS.Theme].menuTabTxtColor ;
+        int color = i == currentMenuTab ? Themes[settings3DS.Theme].menuTxtColor : Themes[settings3DS.Theme].menuTxtUnselectedColor ;
         ui3dsDrawStringWithNoWrapping(i * 75 + 10, 6, (i+1)*75 + 10, 21, color, HALIGN_CENTER, 
             menuTab[i].Title);
 
@@ -298,7 +297,7 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
     //battery display
     ui3dsDrawRect(287, 223, 315, 236, Themes[settings3DS.Theme].menuTxtColor, 1.0f);
     ui3dsDrawRect(284, 226, 287, 233, Themes[settings3DS.Theme].menuTxtColor, 1.0f);
-    ui3dsDrawRect(289, 224, 313, 235, Themes[settings3DS.Theme].menuBarColor, 1.0f);
+    ui3dsDrawRect(289, 224, 313, 235, Themes[settings3DS.Theme].menuBottomBarColor, 1.0f);
     ui3dsDrawRect(291, 226, 311, 233, Themes[settings3DS.Theme].menuTxtColor, 0.5f);
     
     ptmuInit();
@@ -344,7 +343,6 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
             Themes[settings3DS.Theme].selectedItemTextColor,       // selectedItemTextColor
             Themes[settings3DS.Theme].selectedItemDescriptionTextColor,       // selectedItemDescriptionTextColor
 
-            Themes[settings3DS.Theme].checkedItemTextColor,       // checkedItemTextColor
             Themes[settings3DS.Theme].normalItemTextColor,       // normalItemTextColor      
             Themes[settings3DS.Theme].normalItemDescriptionTextColor,       // normalItemDescriptionTextColor      
             Themes[settings3DS.Theme].disabledItemTextColor,       // disabledItemTextColor
@@ -365,7 +363,6 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
             ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].selectedItemTextColor, alpha) + white,       // selectedItemTextColor
             ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].selectedItemDescriptionTextColor, alpha) + white,       // selectedItemDescriptionTextColor
 
-            ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].checkedItemTextColor, alpha) + white,       // checkedItemTextColor
             ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].normalItemTextColor, alpha) + white,       // normalItemTextColor      
             ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].normalItemDescriptionTextColor, alpha) + white,       // normalItemDescriptionTextColor      
             ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].disabledItemTextColor, alpha) + white,       // disabledItemTextColor
@@ -389,9 +386,9 @@ void menu3dsDrawMenu(int menuItemFrame, int translateY)
 void menu3dsDrawDialog()
 {
     // Dialog's Background
-    int dialogBackColor2 = ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogBackColor, 0.9f);
+    int dialogBackColor2 = ui3dsApplyAlphaToColor(dialogBackColor, 0.9f);
     ui3dsDrawRect(0, 0, 320, 75, dialogBackColor2);
-    ui3dsDrawRect(0, 75, 320, 160, Themes[settings3DS.Theme].dialogBackColor);
+    ui3dsDrawRect(0, 75, 320, 160, dialogBackColor);
 
     // Left trim the dialog title
     int len = strlen(dialogTab.Title);
@@ -405,7 +402,7 @@ void menu3dsDrawDialog()
 
     // Draw the dialog's title and descriptive text
     int dialogTitleTextColor = 
-        ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogBackColor, 0.5f) + 
+        ui3dsApplyAlphaToColor(dialogBackColor, 0.5f) + 
         ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogTextColor, 0.5f);
     ui3dsDrawStringWithNoWrapping(30, 10, 290, 25, dialogTitleTextColor, HALIGN_LEFT, &dialogTab.Title[startChar]);
     ui3dsDrawStringWithWrapping(30, 30, 290, 70, Themes[settings3DS.Theme].dialogTextColor, HALIGN_LEFT, dialogTab.DialogText);
@@ -418,7 +415,6 @@ void menu3dsDrawDialog()
         Themes[settings3DS.Theme].dialogSelectedItemTextColor,        // selectedItemTextColor
         dialogItemDescriptionTextColor,     // selectedItemDescriptionColor
 
-        Themes[settings3DS.Theme].dialogItemTextColor,                // checkedItemTextColor
         Themes[settings3DS.Theme].dialogItemTextColor,                // normalItemTextColor
         dialogItemDescriptionTextColor,     // normalItemDescriptionTextColor
         dialogItemDescriptionTextColor,     // disabledItemTextColor
@@ -437,14 +433,12 @@ void menu3dsDrawDialogProgressBar(float per)
     aptMainLoop();
     int y = 80;
 
-    int dialogBackColor2 = ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].progressBarColor, 0.5f);
     ui3dsDrawRect(30, 100+y, 290, 120+y, Themes[settings3DS.Theme].progressBarColor);
-    ui3dsDrawRect(31, 101+y, 289, 119+y, Themes[settings3DS.Theme].dialogBackColor);
-    ui3dsDrawRect(33, 103+y, 287, 117+y, dialogBackColor2);
+    ui3dsDrawRect(31, 101+y, 289, 119+y, dialogBackColor);
 
     ui3dsDrawRect(33, 103+y, 33+(254*per)/100, 117+y, Themes[settings3DS.Theme].progressBarColor);
 
-    ui3dsDrawRect(30, 120+y, 290, 135+y, Themes[settings3DS.Theme].dialogBackColor);
+    ui3dsDrawRect(30, 120+y, 290, 135+y, dialogBackColor);
     ui3dsDrawStringWithNoWrapping(30, 120+y, 290, 135+y, Themes[settings3DS.Theme].dialogTextColor, HALIGN_LEFT, text);
 
  
@@ -658,7 +652,7 @@ int menu3dsMenuSelectItem(void (*itemChangedCallback)(int ID, int value))
                 snprintf(menuTextBuffer, 511, "%s", currentTab->MenuItems[currentTab->SelectedItemIndex].Text);
                 int resultValue = menu3dsShowDialog(menuTextBuffer, 
                     currentTab->MenuItems[currentTab->SelectedItemIndex].PickerDescription,
-                    currentTab->MenuItems[currentTab->SelectedItemIndex].PickerBackColor,
+                    Themes[settings3DS.Theme].dialogColorPicker,
                     (SMenuItem *)currentTab->MenuItems[currentTab->SelectedItemIndex].PickerItems,
                     currentTab->MenuItems[currentTab->SelectedItemIndex].PickerItemCount,
                     currentTab->MenuItems[currentTab->SelectedItemIndex].Value
@@ -898,7 +892,7 @@ int menu3dsShowDialog(char *title, char *dialogText, int newDialogBackColor, SMe
 {
     SMenuTab *currentTab = &dialogTab;
 
-    Themes[settings3DS.Theme].dialogBackColor = newDialogBackColor;
+    dialogBackColor = newDialogBackColor;
 
     currentTab->Title = title;
     currentTab->DialogText = dialogText;
@@ -951,7 +945,7 @@ int menu3dsShowDialogProgress(char *title, char *dialogText, int newDialogBackCo
     lastProgress=0;
     SMenuTab *currentTab = &dialogTab;
 
-    Themes[settings3DS.Theme].dialogBackColor = newDialogBackColor;
+    dialogBackColor = newDialogBackColor;
 
     currentTab->Title = title;
     currentTab->DialogText = dialogText;
@@ -1021,7 +1015,7 @@ int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor)
 
     SMenuTab *currentTab = &dialogTab;
 
-    Themes[settings3DS.Theme].dialogBackColor = newDialogBackColor;
+    dialogBackColor = newDialogBackColor;
 
     currentTab->Title = title;
     currentTab->DialogText = dialogText;
@@ -1056,9 +1050,9 @@ int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor)
         ui3dsSetTranslate(0, y);
 
         // Dialog's Background
-        int dialogBackColor2 = ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogBackColor, 0.9f);
+        int dialogBackColor2 = ui3dsApplyAlphaToColor(dialogBackColor, 0.9f);
         ui3dsDrawRect(0, 0, 320, 28, dialogBackColor2);
-        ui3dsDrawRect(0, 28, 320, 180, Themes[settings3DS.Theme].dialogBackColor);
+        ui3dsDrawRect(0, 28, 320, 180, dialogBackColor);
 
         // Left trim the dialog title
         int len = strlen(dialogTab.Title);
@@ -1072,7 +1066,7 @@ int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor)
 
     // Draw the dialog's title and descriptive text
         int dialogTitleTextColor = 
-        ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogBackColor, 0.5f) + 
+        ui3dsApplyAlphaToColor(dialogBackColor, 0.5f) + 
         ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogTextColor, 0.5f);
         ui3dsDrawStringWithNoWrapping(30, 10, 290, 25, dialogTitleTextColor, HALIGN_LEFT, &dialogTab.Title[startChar]);
         ui3dsDrawStringWithWrapping(30, 30, 290, 150, Themes[settings3DS.Theme].dialogTextColor, HALIGN_LEFT, dialogTab.DialogText);
@@ -1085,7 +1079,6 @@ int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor)
             Themes[settings3DS.Theme].dialogSelectedItemTextColor,        // selectedItemTextColor
             dialogItemDescriptionTextColor,     // selectedItemDescriptionColor
 
-            Themes[settings3DS.Theme].dialogItemTextColor,                // checkedItemTextColor
             Themes[settings3DS.Theme].dialogItemTextColor,                // normalItemTextColor
             dialogItemDescriptionTextColor,     // normalItemDescriptionTextColor
             dialogItemDescriptionTextColor,     // disabledItemTextColor
@@ -1135,9 +1128,9 @@ int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor)
         ui3dsSetTranslate(0, y);
 
         // Dialog's Background
-        int dialogBackColor2 = ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogBackColor, 0.9f);
+        int dialogBackColor2 = ui3dsApplyAlphaToColor(dialogBackColor, 0.9f);
         ui3dsDrawRect(0, 0, 320, 28, dialogBackColor2);
-        ui3dsDrawRect(0, 28, 320, 180, Themes[settings3DS.Theme].dialogBackColor);
+        ui3dsDrawRect(0, 28, 320, 180, dialogBackColor);
 
         // Left trim the dialog title
         int len = strlen(dialogTab.Title);
@@ -1151,7 +1144,7 @@ int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor)
 
     // Draw the dialog's title and descriptive text
         int dialogTitleTextColor = 
-        ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogBackColor, 0.5f) + 
+        ui3dsApplyAlphaToColor(dialogBackColor, 0.5f) + 
         ui3dsApplyAlphaToColor(Themes[settings3DS.Theme].dialogTextColor, 0.5f);
         ui3dsDrawStringWithNoWrapping(30, 10, 290, 25, dialogTitleTextColor, HALIGN_LEFT, &dialogTab.Title[startChar]);
         ui3dsDrawStringWithWrapping(30, 30, 290, 150, Themes[settings3DS.Theme].dialogTextColor, HALIGN_LEFT, dialogTab.DialogText);
@@ -1164,7 +1157,6 @@ int menu3dsShowDialogInfo(char *title, char *dialogText, int newDialogBackColor)
             Themes[settings3DS.Theme].dialogSelectedItemTextColor,        // selectedItemTextColor
             dialogItemDescriptionTextColor,     // selectedItemDescriptionColor
 
-            Themes[settings3DS.Theme].dialogItemTextColor,                // checkedItemTextColor
             Themes[settings3DS.Theme].dialogItemTextColor,                // normalItemTextColor
             dialogItemDescriptionTextColor,     // normalItemDescriptionTextColor
             dialogItemDescriptionTextColor,     // disabledItemTextColor
@@ -1547,8 +1539,8 @@ void printROMInfo(char *txt)
 };
 void printAbout(char *txt)
 {
-    sprintf(txt,"Snes9x for 3DS\nVersion: %s\n", REVISION);
-    strcat(txt, "Snes9x for 3DS is a high-compatibility SNES emulator for your Old 3DS / 2DS. It runs many games at full speed (60 fps).\n");
-    strcat(txt, "Home: https://github.com/bubble2k16/snes9x_3ds\n");
+    sprintf(txt,"Version: %s\nSnes9x Version: %s\nDate: %s", REVISION, VERSION,DATE);
+    strcat(txt, "\n\nSnes9x for 3DS is a high-compatibility SNES emulator for your Old 3DS / 2DS. It runs many games at full speed (60 fps).\n");
+    strcat(txt, "\n\nHome: https://github.com/bubble2k16/snes9x_3ds\n");
     strcat(txt, "Author: bubble2k16");
 };

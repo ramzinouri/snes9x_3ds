@@ -54,7 +54,7 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 CFLAGS	:=	-g -w -O3 -mword-relocations -finline-limit=20000 \
 			-fomit-frame-pointer -ffunction-sections \
 			$(ARCH) -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
-			-DREVISION=\"$(REVISION)\"
+			-DREVISION=\"$(REVISION)\" -DDATE=\"$(shell date +%FT%R)\"
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
 
