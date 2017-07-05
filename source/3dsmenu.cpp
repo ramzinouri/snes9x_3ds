@@ -1539,8 +1539,8 @@ void printROMInfo(char *txt)
 };
 void printAbout(char *txt)
 {
-    sprintf(txt,"Version: %s\nSnes9x Version: %s\nDate: %s", REVISION, VERSION,DATE);
-    strcat(txt, "\n\nSnes9x for 3DS is a high-compatibility SNES emulator for your Old 3DS / 2DS. It runs many games at full speed (60 fps).\n");
-    strcat(txt, "\n\nHome: https://github.com/bubble2k16/snes9x_3ds\n");
+    sprintf(txt,"Version: %s\nSnes9x Version: %s\nDate: %s\n \n", REVISION, VERSION,DATE);
+    strcat(txt, "Snes9x for 3DS is a high-compatibility SNES emulator for your Old 3DS / 2DS. It runs many games at full speed (60 fps).\n \n");
+    strcat(txt, "Home: https://github.com/bubble2k16/snes9x_3ds\n");
     strcat(txt, "Author: bubble2k16");
 };

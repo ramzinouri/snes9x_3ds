@@ -2,7 +2,6 @@
 
 
 Theme3ds Themes[]={
-     //theme 0
      { "Default theme", //Name
       0x1976D2, //topBGColor
       0x1976D2, //menuBarColor
@@ -60,6 +59,35 @@ Theme3ds Themes[]={
       0x707070, //txtBottomColor
       0xffe340}, //batteryChargeColor
 
+
+      {"Light theme", //Name
+      0xfbfbfd, //topBGColor
+      0xfbfbfd, //menuBarColor
+      0xf9f9fb, //menuBottomBarColor
+      0xdcdfe6, //menuBackColor
+      0x565a63, //menuTxtColor
+      0xc4c5c9, //menuTxtUnselectedColor
+      0xee7a55, //selectedTabColor
+      0xe7e8ec, //selectedItemBackColor
+      0x555962, //selectedItemTextColor
+      0x555962, //selectedItemDescriptionTextColor
+      0x7d88a3, //normalItemTextColor
+      0x9fa6b8, //normalItemDescriptionTextColor
+      0xa5aab7, //disabledItemTextColor
+      0xef7b56, //headerItemTextColor
+      0x4b98dc, //subtitleTextColor
+      0xecedf1, //dialogColor
+      0xf9f9fb, //dialogColorInfo
+      0xfbeded, //dialogColorError
+      0xecedf1, //dialogColorPicker
+      0x555962, //dialogTextColor
+      0x565a63, //dialogItemTextColor
+      0xFFFFFF, //dialogSelectedItemTextColor
+      0xa0bbce, //dialogSelectedItemBackColor
+      0x4fc281, //progressBarColor
+      0x565a63, //txtBottomColor
+      0x4fc281}, //batteryChargeColor
+
       {"Maven theme", //Name
       0x11202F, //topBGColor
       0x11202F, //menuBarColor
@@ -88,34 +116,4 @@ Theme3ds Themes[]={
       0x707070, //txtBottomColor
       0xFF855C}, //batteryChargeColor
 
-      {"unnamed theme", //Name
-      0xfbfbfd, //topBGColor
-      0xfbfbfd, //menuBarColor
-      0xf9f9fb, //menuBottomBarColor
-      0xf0f1f5, //menuBackColor
-      0x565a63, //menuTxtColor
-      0xc4c5c9, //menuTxtUnselectedColor
-      0xee7a55, //selectedTabColor
-      0xe7e8ec, //selectedItemBackColor
-      0x555962, //selectedItemTextColor
-      0x555962, //selectedItemDescriptionTextColor
-      0x9fa6b8, //normalItemTextColor
-      0x9fa6b8, //normalItemDescriptionTextColor
-      0xdcdfe6, //disabledItemTextColor
-      0xef7b56, //headerItemTextColor
-      0x4b98dc, //subtitleTextColor
-
-      0xecedf1, //dialogColor
-      0xf9f9fb, //dialogColorInfo
-      0xfbeded, //dialogColorError
-      0xecedf1, //dialogColorPicker
-
-      0x555962, //dialogTextColor
-      0x565a63, //dialogItemTextColor
-      0xFFFFFF, //dialogSelectedItemTextColor
-      0xa0bbce, //dialogSelectedItemBackColor
-
-      0x4fc281, //progressBarColor
-      0x707070, //txtBottomColor
-      0x4fc281}, //batteryChargeColor
 };
