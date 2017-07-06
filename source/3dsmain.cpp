@@ -234,7 +234,7 @@ SMenuItem optionMenu[] = {
     MENU_MAKE_PICKER    (18000, "  Font", "The font used for the user interface.", optionsForFont),
     MENU_MAKE_PICKER    (18500, "  Color Theme", "The Theme used for the user interface.", optionsForTheme),
     MENU_MAKE_CHECKBOX  (15001, "  Hide text in bottom screen", 0),
-    MENU_MAKE_CHECKBOX  (15002, "  Disable Border", 0),
+    MENU_MAKE_CHECKBOX  (15002, "  Disable Border (SD:3ds/data/snes9x_3ds/Border.png)", 0),
     MENU_MAKE_DISABLED  (""),
     MENU_MAKE_CHECKBOX  (19100, "  Automatically save state on exit and load state on start", 0),
     MENU_MAKE_DISABLED  (""),

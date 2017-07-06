@@ -58,6 +58,10 @@ CFLAGS	:=	-g -w -O3 -mword-relocations -finline-limit=20000 \
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
 
+ifeq ($(DEBUG),1)
+	CFLAGS	+=	-DSNES9XDEBUG
+endif
+
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
 ASFLAGS	:=	-g $(ARCH)
