@@ -886,7 +886,7 @@ void menuPause()
     menu3dsSetTabSubTitle(2, NULL);
     menu3dsSetTabSubTitle(1, file3dsGetCurrentDir());
     if (previousFileID >= 0)
-        menu3dsSetSelectedItemIndexByID(3, previousFileID);
+        menu3dsSetSelectedItemIndexByID(1, previousFileID);
     menu3dsSetCurrentMenuTab(0);
     menu3dsSetTransferGameScreen(true);
 
