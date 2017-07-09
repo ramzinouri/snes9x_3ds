@@ -14,7 +14,6 @@
 #include "cpuexec.h"
 #include "debug.h"
 #include "missing.h"
-#include "display.h"
 #include "apu.h"
 #include "sa1.h"
 #include "spc7110.h"

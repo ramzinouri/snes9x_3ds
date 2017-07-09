@@ -6,7 +6,6 @@
 #include "memmap.h"
 #include "ppu.h"
 #include "cpuexec.h"
-#include "display.h"
 #include "gfx.h"
 #include "apu.h"
 #include "cheats.h"

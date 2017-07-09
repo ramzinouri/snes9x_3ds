@@ -111,7 +111,7 @@ CPPFILES	:=	3dsmain.cpp 3dsmenu.cpp 3dsopt.cpp \
 			Snes9x/snapshot.cpp \
 			Snes9x/cpu.cpp Snes9x/sa1.cpp Snes9x/debug.cpp Snes9x/apudebug.cpp Snes9x/sdd1.cpp Snes9x/tile.cpp Snes9x/srtc.cpp \
 			Snes9x/gfx.cpp Snes9x/gfxhw.cpp Snes9x/memmap.cpp Snes9x/cliphw.cpp \
-			Snes9x/dsp1.cpp Snes9x/ppu.cpp Snes9x/ppuvsect.cpp Snes9x/dma.cpp Snes9x/snes9x.cpp Snes9x/data.cpp Snes9x/globals.cpp \
+			Snes9x/dsp1.cpp Snes9x/ppu.cpp Snes9x/ppuvsect.cpp Snes9x/dma.cpp Snes9x/data.cpp Snes9x/globals.cpp \
 			
 
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))

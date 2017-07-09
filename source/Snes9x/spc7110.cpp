@@ -15,17 +15,17 @@
 #define chdir _chdir
 #define getcwd _getcwd
 #endif
-#define FREEZEFOLDER	GUI.FreezeFileDir
+
 //zinx suggested this, for *nix compatibility
 #define PATH_MAX	MAX_PATH
 #else // Unix
-#include "display.h"
+
 #include <limits.h>
 #include <unistd.h>
-#define FREEZEFOLDER S9xGetSnapshotDirectory ()
+
 #endif
 
-extern "C" const char *S9xGetFilename (const char *);
+#include "3dsimpl.h"
 extern "C" char *osd_GetPackDir();
 //really not needed, but usually MS adds the _ to POSIX functions,
 //while *nix doesn't, so this was to "un-M$" the function.
@@ -317,19 +317,12 @@ void ReadPackData()
 			char dir [_MAX_DIR + 1];
 			char fname [_MAX_FNAME + 1];
 			char ext [_MAX_EXT + 1];
-			if (strlen (FREEZEFOLDER))
-			{
-				//splitpath (Memory.ROMFilename, drive, dir, fname, ext);
-				strcpy (name, FREEZEFOLDER);
-				strcat (name, "/");
-			}
-			else
-			{
-				splitpath (Memory.ROMFilename, drive, dir, fname, ext);
-				strcpy(name, drive);
-				//strcat(filename, "\\");
-				strcat(name, dir);
-			}
+
+			splitpath (Memory.ROMFilename, drive, dir, fname, ext);
+			strcpy(name, drive);
+			//strcat(filename, "\\");
+			strcat(name, dir);
+
 			strcat(name, pfold);
 			char bfname[11];
 			sprintf(bfname, "%06X.bin", table);

@@ -9,7 +9,6 @@
 #include "apu.h"
 #include "dma.h"
 #include "gfx.h"
-#include "display.h"
 #include "sa1.h"
 #include "sdd1.h"
 #include "srtc.h"
@@ -17,6 +16,7 @@
 #include "bsx.h"
 
 #include "3dsopt.h"
+#include "3dsimpl.h"
 
 #ifndef ZSNES_FX
 #include "fxemu.h"

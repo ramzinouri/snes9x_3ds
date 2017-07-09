@@ -5,15 +5,13 @@
 
 #include "memmap.h"
 #include "ppu.h"
-#include "display.h"
+
 #include "gfx.h"
 #include "tile.h"
 
 //#include "3dsgpu.h"
 
-#ifdef USE_GLIDE
-#include "3d.h"
-#endif 
+
 
 extern uint32 HeadMask [4];
 extern uint32 TailMask [5];

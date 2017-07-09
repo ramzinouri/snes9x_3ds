@@ -19,7 +19,7 @@
 #include "memmap.h"
 #include "cpuexec.h"
 #include "ppu.h"
-#include "display.h"
+
 #include "cheats.h"
 #include "apu.h"
 #include "sa1.h"
@@ -29,7 +29,9 @@
 #include "spc7110.h"
 #include "seta.h"
 #include "bsx.h"
+
 #include "3dsmenu.h"
+#include "3dsimpl.h"
 
 #ifdef UNZIP_SUPPORT
 #include "unzip.h"

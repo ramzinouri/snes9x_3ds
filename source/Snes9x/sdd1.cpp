@@ -5,7 +5,7 @@
 #include "memmap.h"
 #include "ppu.h"
 #include "sdd1.h"
-#include "display.h"
+#include "3dsimpl.h"
 
 #ifdef __linux
 #include <unistd.h>

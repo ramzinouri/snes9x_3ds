@@ -7,7 +7,6 @@
 
 #include "snes9x.h"
 #include "memmap.h"
-#include "display.h"
 #include "bsx.h"
 
 #include <ctime>

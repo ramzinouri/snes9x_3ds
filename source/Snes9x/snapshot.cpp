@@ -15,13 +15,13 @@
 #endif
 
 #include "snapshot.h"
-#include "snaporig.h"
+
 #include "memmap.h"
 #include "snes9x.h"
 #include "65c816.h"
 #include "ppu.h"
 #include "cpuexec.h"
-#include "display.h"
+
 #include "apu.h"
 #include "soundux.h"
 #include "sa1.h"
@@ -29,6 +29,8 @@
 #include "sdd1.h"
 #include "spc7110.h"
 #include "bufferedfilewriter.h"
+
+#include "3dsimpl.h"
 
 extern uint8 *SRAM;
 
@@ -470,17 +472,6 @@ bool8 S9xFreezeGame (const char *filename)
 		stream.close();
 
 		S9xPrepareSoundForSnapshotSave (TRUE);
-
-		/*if(S9xMovieActive())
-		{
-			sprintf(String, "Movie snapshot %s", S9xBasename (filename));
-			S9xMessage (S9X_INFO, S9X_FREEZE_FILE_INFO, String);
-		}
-		else*/
-		{
-			sprintf(String, "Saved %s", S9xBasename (filename));
-			S9xMessage (S9X_INFO, S9X_FREEZE_FILE_INFO, String);
-		}
 
 		return (TRUE);
     }

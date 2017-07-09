@@ -6,7 +6,6 @@
 #include "memmap.h"
 #include "ppu.h"
 #include "cpuexec.h"
-#include "display.h"
 #include "gfx.h"
 #include "apu.h"
 #include "cheats.h"
@@ -18,10 +17,8 @@
 #define M7 19
 #define M8 19
 
-void output_png();
 void ComputeClipWindows ();
-static void S9xDisplayFrameRate ();
-static void S9xDisplayString (const char *string);
+
 
 extern uint8 BitShifts[8][4];
 extern uint8 TileShifts[8][4];
@@ -352,8 +349,7 @@ bool8 S9xGraphicsInit ()
     GFX.Delta = (GFX.SubScreen - GFX.Screen) >> 1;
 	//printf ("GFX.Delta = %d\n", GFX.Delta);
     GFX.DepthDelta = GFX.SubZBuffer - GFX.ZBuffer;
-    //GFX.InfoStringTimeout = 0;
-    //GFX.InfoString = NULL;
+
 
     PPU.BG_Forced = 0;
     IPPU.OBJChanged = TRUE;
@@ -635,8 +631,6 @@ void S9xUpdatePalettes()
 
 void S9xStartScreenRefresh ()
 {
-    if (GFX.InfoStringTimeout > 0 && --GFX.InfoStringTimeout == 0)
-	GFX.InfoString = NULL;
 	
 	/*if (GFX.PreviousFrameBrightness != PPU.Brightness)
 	{
@@ -849,11 +843,6 @@ void S9xEndScreenRefresh ()
 
 		//take screenshot here.
 
-		if (Settings.DisplayFrameRate)
-	    	S9xDisplayFrameRate ();
-		if (GFX.InfoString)
-	    	S9xDisplayString (GFX.InfoString);
-
 		S9xDeinitUpdate (IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight,
 			 Settings.SixteenBit);
     }
@@ -942,11 +931,6 @@ void S9xEndScreenRefresh ()
 	}
 }
 
-void S9xSetInfoString (const char *string)
-{
-    GFX.InfoString = string;
-    GFX.InfoStringTimeout = 120;
-}
 
 inline void SelectTileRenderer (bool8 normal)
 {
@@ -4229,6 +4213,7 @@ void RenderScreen (uint8 *Screen, bool8 sub, bool8 force_no_add, uint8 D)
     }
 }
 
+/*
 #include "font.h"
 
 void DisplayChar (uint8 *Screen, uint8 c)
@@ -4259,7 +4244,7 @@ void DisplayChar (uint8 *Screen, uint8 c)
 					else if(Memory.Iformat==2)
 						*s= BUILD_PIXEL(0,31,31);
 					else *s = 0xffff;
-					*/
+					*-/
 					*s=Settings.DisplayColor;
 				}
 				else
@@ -4336,7 +4321,7 @@ static void S9xDisplayString (const char *string)
 		  (font_width - 1);
     }
 }
-
+*/
 // This is for reference only
 //
 void S9xUpdateScreenSoftware ()

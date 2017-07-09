@@ -1205,7 +1205,6 @@ void gpu3dsTransferToScreenBuffer()
 void gpu3dsSwapScreenBuffers()
 {
 	gfxSwapBuffersGpu();
-    //sf2d_pool_reset();
 }
 
 

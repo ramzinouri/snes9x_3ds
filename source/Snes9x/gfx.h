@@ -35,8 +35,6 @@ struct SGFX{
     uint8  Z2;          // Depth to save
     uint8  ZSprite;     // Used to ensure only 1st sprite is drawn per pixel
     uint32 FixedColour;
-    const char *InfoString;
-    uint32 InfoStringTimeout;
     uint32 StartY;
     uint32 EndY;
     struct ClipData *pCurrentClip;

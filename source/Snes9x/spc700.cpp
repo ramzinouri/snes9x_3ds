@@ -6,7 +6,6 @@
 #include "snes9x.h"
 #include "spc700.h"
 #include "memmap.h"
-#include "display.h"
 #include "cpuexec.h"
 #include "apu.h"
 
