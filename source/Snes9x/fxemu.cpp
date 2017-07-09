@@ -32,7 +32,6 @@ void FxFlushCache()
 
 void fx_flushCache()
 {
-    fx_restoreCache();
     GSU.vCacheFlags = 0;
     GSU.bCacheActive = FALSE;
 }
