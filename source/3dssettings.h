@@ -51,7 +51,8 @@ typedef struct
                                             //   0 - Disabled
                                             //   1 - Enabled
 
-    int     DisableBorder=0;                  // Disable Border
+    int     DisableBorder=0;                // Disable Border
+    int     Disable3DSlider=0;              // Disable 3DSlider
 
 } S9xSettings3DS;
 

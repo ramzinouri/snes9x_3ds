@@ -566,7 +566,15 @@ int menu3dsMenuSelectItem(void (*itemChangedCallback)(int ID, int value))
             break;
         }
         menu3dsDrawEverything();
-        gpu3dsCheckSlider();
+
+        if(!settings3DS.Disable3DSlider)
+        {
+            gfxSet3D(true);
+            gpu3dsCheckSlider();
+        }
+        else
+            gfxSet3D(false);
+        
         hidScanInput();
         thisKeysHeld = hidKeysHeld();
 

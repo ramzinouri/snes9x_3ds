@@ -227,7 +227,7 @@ SMenuItem emulatorNewMenu[] = {
     };
 
 
-int globalOptionMenuCount = 8; // where global settings end
+int globalOptionMenuCount = 9; // where global settings end
 SMenuItem optionMenu[] = {
     MENU_MAKE_HEADER1   ("GLOBAL SETTINGS"),
     MENU_MAKE_PICKER    (11000, "  Screen Stretch", "How would you like the final screen to appear?", optionsForStretch),
@@ -235,6 +235,7 @@ SMenuItem optionMenu[] = {
     MENU_MAKE_PICKER    (18500, "  Color Theme", "The Theme used for the user interface.", optionsForTheme),
     MENU_MAKE_CHECKBOX  (15001, "  Hide text in bottom screen", 0),
     MENU_MAKE_CHECKBOX  (15002, "  Disable Border (SD:3ds/data/snes9x_3ds/Border.png)", 0),
+    MENU_MAKE_CHECKBOX  (15003, "  Disable 3D Slider)", 0),
     MENU_MAKE_DISABLED  (""),
     MENU_MAKE_CHECKBOX  (19100, "  Automatically save state on exit and load state on start", 0),
     MENU_MAKE_DISABLED  (""),
@@ -487,6 +488,7 @@ bool settingsReadWriteFullListGlobal(bool writeMode)
     config3dsReadWriteInt32("ScreenStretch=%d\n", &settings3DS.ScreenStretch, 0, 7);
     config3dsReadWriteInt32("HideUnnecessaryBottomScrText=%d\n", &settings3DS.HideUnnecessaryBottomScrText, 0, 1);
     config3dsReadWriteInt32("DisableBorder=%d\n", &settings3DS.DisableBorder, 0, 1);
+    config3dsReadWriteInt32("Disable3DSlider=%d\n", &settings3DS.Disable3DSlider, 0, 1);
     config3dsReadWriteInt32("Font=%d\n", &settings3DS.Font, 0, 2);
     config3dsReadWriteInt32("Theme=%d\n", &settings3DS.Theme, 0, TOTALTHEMECOUNT-1);
 
@@ -679,6 +681,7 @@ bool menuCopySettings(bool copyMenuToSettings)
     UPDATE_SETTINGS(settings3DS.ScreenStretch, 2, 11000);
     UPDATE_SETTINGS(settings3DS.HideUnnecessaryBottomScrText, 2, 15001);
     UPDATE_SETTINGS(settings3DS.DisableBorder, 2, 15002);
+    UPDATE_SETTINGS(settings3DS.Disable3DSlider, 2, 15003);
     UPDATE_SETTINGS(settings3DS.AutoSavestate, 2, 19100);
     UPDATE_SETTINGS(settings3DS.MaxFrameSkips, 2, 10000);
     UPDATE_SETTINGS(settings3DS.ForceFrameRate, 2, 12000);
@@ -1400,7 +1403,15 @@ void emulatorLoop()
             break;
 
         gpu3dsStartNewFrame();
-        gpu3dsCheckSlider();
+
+        if(!settings3DS.Disable3DSlider)
+        {
+            gfxSet3D(true);
+            gpu3dsCheckSlider();
+        }
+        else
+            gfxSet3D(false);
+
         updateFrameCount();
 
     	input3dsScanInputForEmulation();
