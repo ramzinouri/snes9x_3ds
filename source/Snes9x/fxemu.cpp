@@ -19,7 +19,7 @@ void (**fx_ppfOpcodeTable)() = 0;
 void FxCacheWriteAccess(uint16 vAddress)
 {
     if((vAddress & 0x00f) == 0x00f)
-		GSU.vCacheFlags |= 1 << ((vAddress&0x1f0) >> 4);
+	GSU.vCacheFlags |= 1 << ((vAddress&0x1f0) >> 4);
 }
 
 void FxFlushCache()
@@ -44,16 +44,8 @@ void fx_updateRamBank(uint8 Byte)
     GSU.pvRamBank = GSU.apvRamBank[Byte & 0x3];
 }
 
-static void fx_readRegisterSpaceForCheck()
-{
-   R15 = GSU.pvRegisters[30];
-   R15 |= ((uint32) GSU.pvRegisters[31]) << 8;
-   GSU.vStatusReg = (uint32) GSU.pvRegisters[GSU_SFR];
-   GSU.vStatusReg |= ((uint32) GSU.pvRegisters[GSU_SFR + 1]) << 8;
-   GSU.vPrgBankReg = (uint32) GSU.pvRegisters[GSU_PBR];
-}
 
-static void fx_readRegisterSpaceForUse()
+static void fx_readRegisterSpace()
 {
     int i;
     uint8 *p;
@@ -62,17 +54,19 @@ static void fx_readRegisterSpaceForUse()
 
     GSU.vErrorCode = 0;
 
-    /* Update R0-R14 */
+    /* Update R0-R15 */
     p = GSU.pvRegisters;
-    for(i=0; i<15; i++)
+    for(i=0; i<16; i++)
     {
-		GSU.avReg[i] = *p++;
-		GSU.avReg[i] += ((uint32)(*p++)) << 8;
+			GSU.avReg[i] = *p++;
+			GSU.avReg[i] += ((uint32)(*p++)) << 8;
     }
 
     /* Update other registers */
     p = GSU.pvRegisters;
-
+    GSU.vStatusReg = (uint32)p[GSU_SFR];
+    GSU.vStatusReg |= ((uint32)p[GSU_SFR+1]) << 8;
+    GSU.vPrgBankReg = (uint32)p[GSU_PBR];
     GSU.vRomBankReg = (uint32)p[GSU_ROMBR];
     GSU.vRamBankReg = ((uint32)p[GSU_RAMBR]) & (FX_RAM_BANKS-1);
     GSU.vCacheBaseReg = (uint32)p[GSU_CBR];
@@ -252,46 +246,32 @@ void fx_computeScreenPointers ()
     }
 }
 
-static void fx_writeRegisterSpaceAfterCheck()
-{
-   GSU.pvRegisters[30] = (uint8_t) R15;
-   GSU.pvRegisters[31] = (uint8_t) (R15 >> 8);
-   GSU.pvRegisters[GSU_SFR] = (uint8_t) GSU.vStatusReg;
-   GSU.pvRegisters[GSU_SFR + 1] = (uint8_t) (GSU.vStatusReg >> 8);
-   GSU.pvRegisters[GSU_PBR] = (uint8_t) GSU.vPrgBankReg;
-}
-
-static void fx_writeRegisterSpaceAfterUse()
+static void fx_writeRegisterSpace()
 {
     int i;
     uint8 *p;
     
     p = GSU.pvRegisters;
-    for(i=0; i<15; i++)
+    for(i=0; i<16; i++)
     {
 		*p++ = (uint8)GSU.avReg[i];
 		*p++ = (uint8)(GSU.avReg[i] >> 8);
     }
 
     /* Update status register */
-    if( USEX16(GSU.vZero) == 0 )
-		SF(Z);
-    else
-		CF(Z);
-    if( GSU.vSign & 0x8000 )
-		SF(S);
-    else
-		CF(S);
-    if(GSU.vOverflow >= 0x8000 || GSU.vOverflow < -0x8000)
-		SF(OV);
-    else
-		CF(OV);
-    if(GSU.vCarry)
-		SF(CY);
-    else
-		CF(CY);
+    if( USEX16(GSU.vZero) == 0 ) SF(Z);
+    	else CF(Z);
+    if( GSU.vSign & 0x8000 ) SF(S);
+    	else CF(S);
+    if(GSU.vOverflow >= 0x8000 || GSU.vOverflow < -0x8000) SF(OV);
+    	else CF(OV);
+    if(GSU.vCarry) SF(CY);
+    	else CF(CY);
     
     p = GSU.pvRegisters;
+    p[GSU_SFR] = (uint8)GSU.vStatusReg;
+    p[GSU_SFR+1] = (uint8)(GSU.vStatusReg>>8);
+    p[GSU_PBR] = (uint8)GSU.vPrgBankReg;
     p[GSU_ROMBR] = (uint8)GSU.vRomBankReg;
     p[GSU_RAMBR] = (uint8)GSU.vRamBankReg;
     p[GSU_CBR] = (uint8)GSU.vCacheBaseReg;
@@ -340,28 +320,28 @@ void FxReset(struct FxInit_s *psFxInfo)
     /* Make ROM bank table */
     for(i=0; i<256; i++)
     {
-		uint32 b = i & 0x7f;
-		if (b >= 0x40)
-		{
-			if (GSU.nRomBanks > 1)
-				b %= GSU.nRomBanks;
-			else
-				b &= 1;
+			uint32 b = i & 0x7f;
+			if (b >= 0x40)
+			{
+				if (GSU.nRomBanks > 1)
+					b %= GSU.nRomBanks;
+				else
+					b &= 1;
 
-			GSU.apvRomBank[i] = &GSU.pvRom[ b << 16 ];
+				GSU.apvRomBank[i] = &GSU.pvRom[ b << 16 ];
+			}
+			else
+			{
+				b %= GSU.nRomBanks * 2;
+				GSU.apvRomBank[i] = &GSU.pvRom[ (b << 16) + 0x200000];
+			}
 		}
-		else
-		{
-			b %= GSU.nRomBanks * 2;
-			GSU.apvRomBank[i] = &GSU.pvRom[ (b << 16) + 0x200000];
-		}
-    }
 
     /* Make RAM bank table */
     for(i=0; i<4; i++)
     {
-		GSU.apvRamBank[i] = &GSU.pvRam[(i % GSU.nRamBanks) << 16];
-		GSU.apvRomBank[0x70 + i] = GSU.apvRamBank[i];
+			GSU.apvRamBank[i] = &GSU.pvRam[(i % GSU.nRamBanks) << 16];
+			GSU.apvRomBank[0x70 + i] = GSU.apvRamBank[i];
     }
     
     /* Start with a nop in the pipe */
@@ -370,31 +350,30 @@ void FxReset(struct FxInit_s *psFxInfo)
     /* Set pointer to GSU cache */
     GSU.pvCache = &GSU.pvRegisters[0x100];
 
-    fx_readRegisterSpaceForCheck();
-    fx_readRegisterSpaceForUse();
+    fx_readRegisterSpace();
 }
 
 static uint8 fx_checkStartAddress()
 {
     /* Check if we start inside the cache */
     if(GSU.bCacheActive && R15 >= GSU.vCacheBaseReg && R15 < (GSU.vCacheBaseReg+512))
-		return TRUE;
+			return TRUE;
    
     /*  Check if we're in an unused area */
     if(GSU.vPrgBankReg < 0x40 && R15 < 0x8000)
-		return FALSE;
+			return FALSE;
     if(GSU.vPrgBankReg >= 0x60 && GSU.vPrgBankReg <= 0x6f)
-		return FALSE;
+			return FALSE;
     if(GSU.vPrgBankReg >= 0x74)
-		return FALSE;
+			return FALSE;
 
     /* Check if we're in RAM and the RAN flag is not set */
     if(GSU.vPrgBankReg >= 0x70 && GSU.vPrgBankReg <= 0x73 && !(SCMR&(1<<3)) )
-		return FALSE;
+			return FALSE;
 
     /* If not, we're in ROM, so check if the RON flag is set */
     if(!(SCMR&(1<<4)))
-		return FALSE;
+			return FALSE;
     
     return TRUE;
 }
@@ -405,16 +384,15 @@ int FxEmulate(uint32 nInstructions)
     uint32 vCount;
 
     /* Read registers and initialize GSU session */
-    fx_readRegisterSpaceForCheck();
+    fx_readRegisterSpace();
 
     /* Check if the start address is valid */
     if(!fx_checkStartAddress())
     {
-		CF(G);
-		fx_writeRegisterSpaceAfterCheck();
-		return 0;
+			CF(G);
+			fx_writeRegisterSpace();
+			return 0;
     }
-	fx_readRegisterSpaceForUse();
 
     /* Execute GSU session */
     CF(IRQ);
@@ -422,14 +400,13 @@ int FxEmulate(uint32 nInstructions)
 	vCount = fx_ppfFunctionTable[FX_FUNCTION_RUN](nInstructions);
 
     /* Store GSU registers */
-	fx_writeRegisterSpaceAfterCheck();
-    fx_writeRegisterSpaceAfterUse();
+    fx_writeRegisterSpace();
 
     /* Check for error code */
     if(GSU.vErrorCode)
-		return GSU.vErrorCode;
+			return GSU.vErrorCode;
     else
-		return vCount;
+			return vCount;
 }
 
 /* Breakpoints */
@@ -447,29 +424,28 @@ void FxBreakPointClear()
 int FxStepOver(uint32 nInstructions)
 {
     uint32 vCount;
-    fx_readRegisterSpaceForCheck();
+    fx_readRegisterSpace();
 
     /* Check if the start address is valid */
     if(!fx_checkStartAddress())
     {
-		CF(G);
-		return 0;
+			CF(G);
+			return 0;
     }
     
     if( PIPE >= 0xf0 )
-		GSU.vStepPoint = USEX16(R15+3);
+			GSU.vStepPoint = USEX16(R15+3);
     else if( (PIPE >= 0x05 && PIPE <= 0x0f) || (PIPE >= 0xa0 && PIPE <= 0xaf) )
-		GSU.vStepPoint = USEX16(R15+2);
+			GSU.vStepPoint = USEX16(R15+2);
     else
-		GSU.vStepPoint = USEX16(R15+1);
+			GSU.vStepPoint = USEX16(R15+1);
 
     vCount = fx_ppfFunctionTable[FX_FUNCTION_STEP_OVER](nInstructions);
-	fx_writeRegisterSpaceAfterCheck();
-    fx_writeRegisterSpaceAfterUse();
+    fx_writeRegisterSpace();
     if(GSU.vErrorCode)
-		return GSU.vErrorCode;
+			return GSU.vErrorCode;
     else
-		return vCount;
+			return vCount;
 }
 
 /* Errors */
@@ -508,4 +484,3 @@ uint8 FxPipe()
 {
     return GSU.vPipe;
 }
-
