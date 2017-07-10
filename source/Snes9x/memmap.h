@@ -4,8 +4,6 @@
 #ifndef _memmap_h_
 #define _memmap_h_
 
-#define UNZIP_SUPPORT
-
 #include "snes9x.h"
 
 #ifdef FAST_LSB_WORD_ACCESS
@@ -54,7 +52,7 @@
 #define SMALLFIRST 3
 
 //File Formats go here
-enum file_formats { FILE_ZIP, FILE_RAR, FILE_JMA, FILE_DEFAULT };
+enum file_formats { FILE_ZIP, FILE_DEFAULT };
 
 class CMemory {
 public:
@@ -97,12 +95,8 @@ public:
     bool SpeedHackAdd(int address, int cyclesPerSkip, int16 originalByte1, int16 originalByte2 = -1, int16 originalByte3 = -1, int16 originalByte4 = -1);
     bool SpeedHackSA1Add(int address, int16 originalByte1, int16 originalByte2 = -1, int16 originalByte3 = -1, int16 originalByte4 = -1);
     void ApplySpeedHackPatches();
-#if 0
-    void SufamiTurboAltROMMap();
-#endif
     void ApplyROMFixes ();
-    void CheckForIPSPatch (const char *rom_filename, bool8 header,
-			   int32 &rom_size);
+    void CheckForIPSPatch (const char *rom_filename, bool8 header,int32 &rom_size);
     
     const char *TVStandard ();
     const char *Speed ();
@@ -116,10 +110,10 @@ public:
     const char *CompanyID ();
     void ParseSNESHeader(uint8*);
 	enum {
-	MAP_PPU, MAP_CPU, MAP_DSP, MAP_LOROM_SRAM, MAP_HIROM_SRAM,
-	MAP_NONE, MAP_DEBUG, MAP_C4, MAP_BWRAM, MAP_BWRAM_BITMAP,
-	MAP_BWRAM_BITMAP2, MAP_SA1RAM, MAP_SPC7110_ROM, MAP_SPC7110_DRAM,
-	MAP_RONLY_SRAM, MAP_OBC_RAM, MAP_SETA_DSP, MAP_SETA_RISC, MAP_BSX, MAP_LAST
+        MAP_PPU, MAP_CPU, MAP_DSP, MAP_LOROM_SRAM, MAP_HIROM_SRAM,
+        MAP_NONE, MAP_DEBUG, MAP_C4, MAP_BWRAM, MAP_BWRAM_BITMAP,
+        MAP_BWRAM_BITMAP2, MAP_SA1RAM, MAP_SPC7110_ROM, MAP_SPC7110_DRAM,
+        MAP_RONLY_SRAM, MAP_OBC_RAM, MAP_SETA_DSP, MAP_SETA_RISC, MAP_BSX, MAP_LAST
     };
     enum { MAX_ROM_SIZE = 0x800000 };
     
@@ -151,39 +145,16 @@ public:
     uint32 CalculatedChecksum;
     uint32 ROMChecksum;
     uint32 ROMComplementChecksum;
-    uint8  *SDD1Index;
-    uint8  *SDD1Data;
-    uint32 SDD1Entries;
-    uint32 SDD1LoggedDataCountPrev;
-    uint32 SDD1LoggedDataCount;
-    uint8  SDD1LoggedData [MEMMAP_MAX_SDD1_LOGGED_ENTRIES];
     char ROMFilename [_MAX_PATH];
 	uint8 ROMRegion;
     uint32 ROMCRC32;
 	uint8 ExtendedFormat;
-#if 0
-	bool8 SufamiTurbo;
-	char Slot1Filename [_MAX_PATH];
-	char Slot2Filename [_MAX_PATH];
-	uint8* ROMOffset1;
-	uint8* ROMOffset2;
-	uint8* SRAMOffset1;
-	uint8* SRAMOffset2;
-	uint32 Slot1Size;
-	uint32 Slot2Size;
-	uint32 Slot1SRAMSize;
-	uint32 Slot2SRAMSize;
-	uint8 SlotContents;
-#endif
 	uint8 *BSRAM;
 
     // Added from Snes9x v1.52
     uint8	*BIOSROM;
 
 	void ResetSpeedMap();
-#if 0
-	bool8 LoadMulti (const char *,const char *,const char *);
-#endif
 };
 
 START_EXTERN_C
@@ -200,22 +171,9 @@ END_EXTERN_C
 
 void S9xAutoSaveSRAM ();
 
-#ifdef NO_INLINE_SET_GET
-uint8 S9xGetByte (uint32 Address);
-uint16 S9xGetWord (uint32 Address);
-void S9xSetByte (uint8 Byte, uint32 Address);
-void S9xSetWord (uint16 Byte, uint32 Address);
-void S9xSetPCBase (uint32 Address);
-uint8 *S9xGetMemPointer (uint32 Address);
-uint8 *GetBasePointer (uint32 Address);
-
-//extern "C"{
-//extern uint8 OpenBus;
-//}
-#else
 #define INLINE inline
 #include "getset.h"
-#endif // NO_INLINE_SET_GET
+
 
 #endif // _memmap_h_
 

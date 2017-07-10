@@ -1,9 +1,5 @@
 #include "copyright.h"
 
-#ifdef __DJGPP
-#include <allegro.h>
-#undef TRUE
-#endif
 
 #include "snes9x.h"
 #include "spc700.h"

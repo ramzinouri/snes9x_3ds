@@ -15,12 +15,9 @@
 #include "gfx.h"
 #include "snapshot.h"
 #include "cheats.h"
-//#include "display.h"
 #include "soundux.h"
 
 #include "3dssnes9x.h"
-#include "3dsexit.h"
-#include "3dsgpu.h"
 #include "3dssound.h"
 #include "3dsui.h"
 #include "3dsinput.h"
@@ -809,38 +806,6 @@ bool8 S9xOpenSoundDevice(int mode, bool8 stereo, int buffer_size)
 	return (TRUE);
 }
 
-void S9xLoadSDD1Data ()
-{
-    //Settings.SDD1Pack=FALSE;
-
-    char filename [_MAX_PATH + 1];
-    char index [_MAX_PATH + 1];
-    char data [_MAX_PATH + 1];
-
-	Settings.SDD1Pack=FALSE;
-    Memory.FreeSDD1Data ();
-
-    if (strncmp (Memory.ROMName, ("Star Ocean"), 10) == 0)
-	{
-		Settings.SDD1Pack=TRUE;
-	}
-    else if(strncmp(Memory.ROMName, ("STREET FIGHTER ALPHA2"), 21)==0)
-	{
-		if(Memory.ROMRegion==1)
-		{
-			Settings.SDD1Pack=TRUE;
-		}
-		else
-		{
-			Settings.SDD1Pack=TRUE;
-		}
-	}
-	else
-	{
-		Settings.SDD1Pack=TRUE;
-	}
-}
-
 const char * S9xGetFilename (const char *ex)
 {
 	static char	s[PATH_MAX + 1];
@@ -893,7 +858,6 @@ void JustifierButtons(uint32& justifiers)
 
 char * osd_GetPackDir(void)
 {
-
     return NULL;
 }
 

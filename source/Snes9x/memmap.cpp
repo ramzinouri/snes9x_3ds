@@ -7,14 +7,6 @@
 #endif
 #include <ctype.h>
 
-#ifdef __linux
-#include <unistd.h>
-#endif
-
-#ifdef JMA_SUPPORT
-#include "jma/s9x-jma.h"
-#endif
-
 #include "snes9x.h"
 #include "memmap.h"
 #include "cpuexec.h"
@@ -33,26 +25,11 @@
 #include "3dsmenu.h"
 #include "3dsimpl.h"
 
-#ifdef UNZIP_SUPPORT
 #include "unzip.h"
-#endif
 
-#ifdef __W32_HEAP
-#include <malloc.h>
-#endif
 
-#ifndef ZSNES_FX
 #include "fxemu.h"
 extern struct FxInit_s SuperFX;
-#else
-START_EXTERN_C
-extern uint8 *SFXPlotTable;
-END_EXTERN_C
-#endif
-
-#ifndef SET_UI_COLOR
-#define SET_UI_COLOR(r,g,b) ;
-#endif
 
 //you would think everyone would have these
 //since they're so useful.
@@ -124,12 +101,6 @@ const uint32 crc32Table[256] = {
 
 void S9xDeinterleaveType1(int TotalFileSize, uint8 * base)
 {
-	if(Settings.DisplayColor==0xffff)
-	{
-		Settings.DisplayColor=BUILD_PIXEL(0,31,0);
-		SET_UI_COLOR(0,255,0);
-	}
-
 	int i;
 	int nblocks = TotalFileSize >> 16;
 	uint8 blocks [256];
@@ -167,12 +138,6 @@ void S9xDeinterleaveGD24(int TotalFileSize, uint8 * base)
 
 	if(TotalFileSize!=0x300000)
 		return;
-
-	if(Settings.DisplayColor==0xffff)
-	{
-		Settings.DisplayColor=BUILD_PIXEL(0,31,31);
-		SET_UI_COLOR(0,255,255);
-	}
 
 	uint8 *tmp = (uint8 *) malloc (0x80000);
 	if (tmp)
@@ -371,15 +336,11 @@ bool8 CMemory::Init ()
     ::SRAM   = SRAM;
     ::RegRAM = FillRAM;
 	
-#ifdef ZSNES_FX
-    SFXPlotTable = ROM + 0x400000;
-#else
     SuperFX.pvRegisters = &Memory.FillRAM [0x3000];
     SuperFX.nRamBanks = 2;	// Most only use 1.  1=64KB, 2=128KB=1024Mb
     SuperFX.pvRam = ::SRAM;
     SuperFX.nRomBanks = (2 * 1024 * 1024) / (32 * 1024);
     SuperFX.pvRom = (uint8 *) ROM;
-#endif
 	
     ZeroMemory (IPPU.TileCache [TILE_2BIT], MAX_2BIT_TILES * 128);
     ZeroMemory (IPPU.TileCache [TILE_4BIT], MAX_4BIT_TILES * 128);
@@ -389,8 +350,8 @@ bool8 CMemory::Init ()
     ZeroMemory (IPPU.TileCached [TILE_4BIT], MAX_4BIT_TILES);
     ZeroMemory (IPPU.TileCached [TILE_8BIT], MAX_8BIT_TILES);
     
-    SDD1Data = NULL;
-    SDD1Index = NULL;
+ //   SDD1Data = NULL;
+ //   SDD1Index = NULL;
 	
 	// Optimizations: Save a copy of the memory map address in the CPU global variable
 	CPU.MemoryMap = this->Map;
@@ -402,11 +363,6 @@ bool8 CMemory::Init ()
 
 void CMemory::Deinit ()
 {
-#ifdef __W32_HEAP
-	if(_HEAPOK!=_heapchk())
-		MessageBox(GUI.hWnd, "CMemory::Deinit", "Heap Corrupt", MB_OK);
-#endif
-
     if (RAM)
     {
 		free ((char *) RAM);
@@ -466,10 +422,10 @@ void CMemory::Deinit ()
 		free ((char *) IPPU.TileCached [TILE_8BIT]);
 		IPPU.TileCached [TILE_8BIT] = NULL;
     }
-    FreeSDD1Data ();
+    //FreeSDD1Data ();
 	Safe(NULL);
 }
-
+/*
 void CMemory::FreeSDD1Data ()
 {
     if (SDD1Index)
@@ -483,7 +439,7 @@ void CMemory::FreeSDD1Data ()
 		SDD1Data = NULL;
     }
 }
-
+*/
 /**********************************************************************************************/
 /* LoadROM()                                                                                  */
 /* This function loads a Snes-Backup image                                                    */
@@ -512,8 +468,6 @@ bool8 CMemory::LoadROM (const char *filename)
 	retry_count =0;
 
 again:
-	Settings.DisplayColor=0xffff;
-	SET_UI_COLOR(255,255,255);
 
 	TotalFileSize = FileLoader(ROM, filename, MAX_ROM_SIZE);
 
@@ -527,8 +481,6 @@ again:
 	{
 		ROM[0x7FD5]=0x31;
 		ROM[0x7FD6]=0x02;
-		Settings.DisplayColor=BUILD_PIXEL(31,0,0);
-		SET_UI_COLOR(255,0,0);
 		S9xMessage(S9X_ERROR,S9X_ROM_CONFUSING_FORMAT_INFO, "Warning! Hacked Dump!");
 	}
 
@@ -536,17 +488,12 @@ again:
 	{
 		ROM[0xFFD5]=0x31;
 		ROM[0xFFD6]=0x02;
-		Settings.DisplayColor=BUILD_PIXEL(31,0,0);
-		SET_UI_COLOR(255,0,0);
 		S9xMessage(S9X_ERROR,S9X_ROM_CONFUSING_FORMAT_INFO, "Warning! Hacked Dump!");
 	}
 
 	if((ROM[0x7FD5]==0x42)&&(ROM[0x7FD6]==0x13)&&(strncmp("METAL COMBAT",(char*)&ROM[0x7FC0],12)==0))
-	{
-		Settings.DisplayColor=BUILD_PIXEL(31,0,0);
-		SET_UI_COLOR(255,0,0);
 		S9xMessage(S9X_ERROR,S9X_ROM_CONFUSING_FORMAT_INFO, "Warning! Hacked Dump!");
-	}
+	
 
     int orig_hi_score, orig_lo_score;
     int hi_score, lo_score;
@@ -581,15 +528,9 @@ again:
 	//If both vectors are invalid, it's type 1 LoROM
 
 	if(ExtendedFormat==NOPE&&((ROM[0x7FFC]|(ROM[0x7FFD]<<8))<0x8000)&&((ROM[0xFFFC]|(ROM[0xFFFD]<<8)) <0x8000))
-	{
-		if(Settings.DisplayColor==0xffff)
-		{
-			Settings.DisplayColor=BUILD_PIXEL(0,31,0);
-			SET_UI_COLOR(0,255,0);
-		}
 		if(!Settings.ForceInterleaved)
 			S9xDeinterleaveType1(TotalFileSize, ROM);
-	}
+	
 
 	//CalculatedSize is now set, so rescore
 	orig_hi_score = hi_score = ScoreHiROM (FALSE);
@@ -730,11 +671,7 @@ again:
 		}
 		else
 		{
-			if(Settings.DisplayColor==0xffff)
-			{
-				Settings.DisplayColor=BUILD_PIXEL(0,31,0);
-				SET_UI_COLOR(0,255,0);
-			}
+
 			bool8 t = LoROM;
 			
 			LoROM = HiROM;
@@ -766,7 +703,7 @@ again:
 	if(ExtendedFormat==SMALLFIRST)
 		Tales=true;
 
-    FreeSDD1Data ();
+    //FreeSDD1Data ();
     InitROM (Tales);
 
 	// Updated to load cheats from a text file.
@@ -798,37 +735,27 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 	unsigned long FileSize = 0;
 	int current_pos;
 	
-#ifdef UNZIP_SUPPORT
+
 	unzFile file=NULL;
 	unzFile zip_file = 0;    
 	unz_file_info unzinfo;
 	char snes_file[256];
 	char *p;
 	uint8 *ptr=buffer;
-#endif
+
     
 	_splitpath (filename, drive, dir, name, ext);
     _makepath (fname, drive, dir, name, ext);
 	
-#if defined(__WIN32__) || defined(__MACOSX__)
-    memmove (&ext [0], &ext[1], 4);
-#endif
-
+	nFormat = FILE_DEFAULT;
 	if (strcasecmp (ext, "zip") == 0)
 		nFormat = FILE_ZIP;
-	else if (strcasecmp (ext, "rar") == 0)
-		nFormat = FILE_RAR;
-	else if (strcasecmp (ext, "jma") == 0)
-		nFormat = FILE_JMA;	
-	else
-		nFormat = FILE_DEFAULT;
 
-	
 	switch( nFormat )
 	{
 	case FILE_ZIP:
 	{
-#ifdef UNZIP_SUPPORT
+
 
 		file = unzOpen(fname);
 
@@ -872,47 +799,9 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 	    }
 	    TotalFileSize += FileSize;
 		strcpy (ROMFilename, fname);
-#endif
-		break;
-	}
-	case FILE_JMA:
-        {
-#ifdef JMA_SUPPORT
-                size_t FileSize = load_jma_file(fname, ROM);
-		
-		if (!FileSize)
-		{
-		 	S9xMessage (S9X_ERROR, S9X_ROM_INFO, "Invalid JMA.");
-			return (0);
-		}
-		
-		TotalFileSize = FileSize;
-		HeaderCount = 0;
-		
-		size_t calc_size = (FileSize / 0x2000) * 0x2000;
-		
-		
-		if ((FileSize - calc_size == 512 && !Settings.ForceNoHeader) ||
-			Settings.ForceHeader)
-		{
-			memmove (ROM, ROM + 512, calc_size);
-			HeaderCount = 1;
-			FileSize -= 512;
-		}
 
-		strcpy (ROMFilename, fname);
-#else
-		S9xMessage (S9X_ERROR, S9X_ROM_INFO, "This binary was not created with JMA support.");
-		return (0);
-#endif
 		break;
 	}
-			
-	case FILE_RAR:
-		// non existant rar loading
-		S9xMessage (S9X_ERROR, S9X_ROM_INFO, "Rar Archives are not currently supported.");
-		return (0);
-		break;
 
 	case FILE_DEFAULT:
 	default:
@@ -972,10 +861,6 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 			{
 				more = TRUE;
 				ext [0]++;
-#if defined(__WIN32__) || defined(__MACOSX__)
-		        memmove (&ext [1], &ext [0], 4);
-			    ext [0] = '.';
-#endif
 				_makepath (fname, drive, dir, name, ext);
 			}
 			else if (ptr - ROM < maxsize + 0x200 &&
@@ -986,10 +871,6 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 			{
 				more = TRUE;
 				name [len - 1]++;
-#if defined(__WIN32__) || defined(__MACOSX__)
-				memmove (&ext [1], &ext [0], 4);
-				ext [0] = '.';
-#endif
 				_makepath (fname, drive, dir, name, ext);
 			}
 			else
@@ -999,21 +880,6 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
     
 		break;
 	}
- 
-
-/*
-    if (HeaderCount == 0)
-		S9xMessage (S9X_INFO, S9X_HEADERS_INFO, "No ROM file header found.");
-    else
-    {
-		if (HeaderCount == 1)
-			S9xMessage (S9X_INFO, S9X_HEADERS_INFO,
-			"Found ROM file header (and ignored it).");
-		else
-			S9xMessage (S9X_INFO, S9X_HEADERS_INFO,
-			"Found multiple ROM file headers (and ignored them).");
-    }
-	*/
 	return TotalFileSize;
 
 }
@@ -1042,8 +908,6 @@ bool8 CMemory::LoadMulti (const char *basename, const char *slot1name, const cha
 	
     CalculatedSize = 0;
 	
-	Settings.DisplayColor=0xffff;
-	SET_UI_COLOR(255,255,255);
 	
     int32 TotalFileSize = FileLoader(ROM, basename, MAX_ROM_SIZE);
 	
@@ -1171,14 +1035,9 @@ void S9xDeinterleaveMode2 ()
 
 void S9xDeinterleaveType2 (bool8 reset)
 {
-	if(Settings.DisplayColor==0xffff||Settings.DisplayColor==BUILD_PIXEL(0,31,0))
-	{
-		Settings.DisplayColor=BUILD_PIXEL(31,14,6);
-		SET_UI_COLOR(255,119,25);
-		  
-	}
-    //S9xMessage (S9X_INFO, S9X_ROM_INTERLEAVED_INFO,
-	//	"ROM image is in interleaved format - converting...");
+
+    S9xMessage (S9X_INFO, S9X_ROM_INTERLEAVED_INFO,
+		"ROM image is in interleaved format - converting...");
 	
     int nblocks = Memory.CalculatedSize >> 16;
     int step = 64;
@@ -1350,10 +1209,7 @@ void CMemory::InitROM (bool8 Interleaved)
 		Settings.SDD1 = Settings.ForceSDD1;
 		if ((ROMType & 0xf0) == 0x40)
 			Settings.SDD1 = !Settings.ForceNoSDD1;
-		
-		if (Settings.SDD1)
-			S9xLoadSDD1Data ();
-		
+
 		if(((ROMType &0xF0) == 0xF0)&((ROMSpeed&0x0F)!=5))
 		{
 			SRAMSize=2;
@@ -1551,15 +1407,7 @@ void CMemory::InitROM (bool8 Interleaved)
 		SRAMMask = Memory.SRAMSize ?
 			((1 << (Memory.SRAMSize + 3)) * 128) - 1 : 0;
 	}
-	if((ROMChecksum + ROMComplementChecksum != 0xffff) || ROMChecksum != CalculatedChecksum || ((uint32)CalculatedSize > (uint32)(((1<<(ROMSize-7))*128)*1024)))
-	{
-		if(Settings.DisplayColor==0xffff || Settings.DisplayColor!=BUILD_PIXEL(31,0,0))
-		{
-			Settings.DisplayColor=BUILD_PIXEL(31,31,0);
-			SET_UI_COLOR(255,255,0);
-		}
-	}
-	
+
 	IAPU.OneCycle = ONE_APU_CYCLE;
 	Settings.Shutdown = Settings.ShutdownMaster;
 	
@@ -1586,17 +1434,8 @@ void CMemory::InitROM (bool8 Interleaved)
 		CompanyId,
 		ROMCRC32);
 	
-	//S9xMessage (S9X_INFO, S9X_ROM_INFO, String);
-#ifdef __WIN32__
-	#ifndef _XBOX
-		EnableMenuItem(GUI.hMenu, IDM_ROM_INFO, MF_ENABLED);
-	#endif
-	#ifdef RTC_DEBUGGER
-		if(Settings.SPC7110RTC)
-			EnableMenuItem(GUI.hMenu, IDM_7110_RTC, MF_ENABLED);
-		else EnableMenuItem(GUI.hMenu, IDM_7110_RTC, MF_GRAYED);
-	#endif
-#endif
+	S9xMessage (S9X_INFO, S9X_ROM_INFO, String);
+
 	Settings.ForceHeader = Settings.ForceHiROM = Settings.ForceLoROM = 
 		Settings.ForceInterleaved = Settings.ForceNoHeader = Settings.ForceNotInterleaved = 
 		Settings.ForceInterleaved2=false;
@@ -1644,8 +1483,8 @@ bool8 CMemory::LoadSRAM (const char *filename)
 		S9xHardResetSRTC ();
 		return (FALSE);
     }
-    if (Settings.SDD1)
-		S9xSDD1LoadLoggedData ();
+//    if (Settings.SDD1)
+//		S9xSDD1LoadLoggedData ();
 	
     return (TRUE);
 }
@@ -1665,8 +1504,8 @@ bool8 CMemory::SaveSRAM (const char *filename)
 		S9xSRTCPreSaveState ();
     }
 	
-    if (Settings.SDD1)
-		S9xSDD1SaveLoggedData ();
+ //   if (Settings.SDD1)
+//		S9xSDD1SaveLoggedData ();
 	
     if (size > 0x20000)
 		size = 0x20000;
@@ -2220,14 +2059,6 @@ void CMemory::HiROMMap ()
 
 	mask[0]=(CalculatedSize/0x10000)-1;
 
-	if (Settings.ForceSA1 ||
-			(!Settings.ForceNoSA1 && (ROMSpeed & ~0x10) == 0x23 && 
-			(ROMType & 0xf) > 3 && (ROMType & 0xf0) == 0x30))
-	{
-			Settings.DisplayColor=BUILD_PIXEL(31,0,0);
-			SET_UI_COLOR(255,0,0);
-	}
-
 
 	int x;
 	bool foundZeros;
@@ -2351,14 +2182,6 @@ void CMemory::TalesROMMap (bool8 Interleaved)
 	  int c;
     int i;
 	
-	if(Interleaved)
-	{
-		if(Settings.DisplayColor==0xffff)
-		{
-			Settings.DisplayColor=BUILD_PIXEL(0,31,0);
-			SET_UI_COLOR(0,255,0);
-		}
-	}
     uint32 OFFSET0 = 0x400000;
     uint32 OFFSET1 = 0x400000;
     uint32 OFFSET2 = 0x000000;
@@ -2423,14 +2246,6 @@ void CMemory::TalesROMMap (bool8 Interleaved)
 		}
     }
 
-	if((strncmp("TALES",(char*)Map[8]+0xFFC0, 5)==0))
-	{
-		if(((*(Map[8]+0xFFDE))==(*(Map[0x808]+0xFFDE))))
-		{
-			Settings.DisplayColor=BUILD_PIXEL(31,0,0);
-			SET_UI_COLOR(255,0,0);
-		}
-	}
 
 	ROMChecksum = *(Map[8]+0xFFDE) + (*(Map[8]+0xFFDF) << 8);
 	ROMComplementChecksum = *(Map[8]+0xFFDC) + (*(Map[8]+0xFFDD) << 8);
@@ -3758,18 +3573,11 @@ void CMemory::ApplySpeedHackPatches()
 
 void CMemory::ApplyROMFixes ()
 {
-#ifdef __W32_HEAP
-	if(_HEAPOK!=_heapchk())
-		MessageBox(GUI.hWnd, "CMemory::ApplyROMFixes", "Heap Corrupt", MB_OK);
-#endif
+
 
 	//don't steal my work! -MK
 	if(ROMCRC32 == 0x1B4A5616 && strncmp(ROMName, "RUDORA NO HIHOU", 15)==0)
-	{
 		strncpy(ROMName, "THIS SCRIPT WAS STOLEN", 22);
-		Settings.DisplayColor=BUILD_PIXEL(31,0,0);
-		SET_UI_COLOR(255,0,0);
-	}
 
 	/*
 	HACKS NSRT can fix that we hadn't detected before.
@@ -3782,13 +3590,6 @@ void CMemory::ApplyROMFixes ()
 [14:25:27] <@Nach>     case 0x340f23e5: //Donkey Kong Country 3 (U) copier hack - handled
 	*/
 
-	if(ROMCRC32==0x6810aa95 || ROMCRC32==0x340f23e5 || ROMCRC32==0x77fd806a ||
-		strncmp (ROMName, "HIGHWAY BATTLE 2", 16)==0 ||
-		(strcmp (ROMName, "FX SKIING NINTENDO 96") == 0 && ROM[0x7FDA]==0))
-	{
-		Settings.DisplayColor=BUILD_PIXEL(31,0,0);
-		SET_UI_COLOR(255,0,0);
-	}
 
 	//Ambiguous chip function pointer assignments
 	DSP1.version=0;
@@ -3978,18 +3779,12 @@ void CMemory::ApplyROMFixes ()
 
 	//Specific game fixes
 
-	Settings.StarfoxHack = strcmp (ROMName, "STAR FOX") == 0 ||
-		strcmp (ROMName, "STAR WING") == 0;
-	Settings.WinterGold = strcmp (ROMName, "FX SKIING NINTENDO 96") == 0 ||
-		strcmp (ROMName, "DIRT RACER") == 0 ||
-		Settings.StarfoxHack;
+	Settings.StarfoxHack = strcmp (ROMName, "STAR FOX") == 0 || strcmp (ROMName, "STAR WING") == 0;
+	Settings.WinterGold = strcmp (ROMName, "FX SKIING NINTENDO 96") == 0 || strcmp (ROMName, "DIRT RACER") == 0 || Settings.StarfoxHack;
 	
 
-	if((strcmp(ROMName, "LEGEND")==0&&!Settings.PAL)||
-		strcmp(ROMName, "King Arthurs World")==0)
-	{
+	if((strcmp(ROMName, "LEGEND")==0&&!Settings.PAL)|| strcmp(ROMName, "King Arthurs World")==0)
 		SNESGameFixes.EchoOnlyOutput=TRUE;
-	}
 
 
 	    Settings.DaffyDuck = (strcmp (ROMName, "DAFFY DUCK: MARV MISS") == 0) ||

@@ -23,7 +23,7 @@
 #define OpenBus OCPU.FastOpenBus
 //#define MAP_CPU 1
 
-INLINE uint8 __attribute__((always_inline)) S9xGetByteNoCycles (uint32 Address)
+INLINE uint8 __attribute__((always_inline)) S9xGetByte (uint32 Address)
 {
 		//t3dsCount (41, "S9xGetByte");
 	
@@ -42,7 +42,7 @@ INLINE uint8 __attribute__((always_inline)) S9xGetByteNoCycles (uint32 Address)
 
 
 
-INLINE uint16 __attribute__((always_inline)) S9xGetWordNoCycles (uint32 Address)
+INLINE uint16 __attribute__((always_inline)) S9xGetWord (uint32 Address)
 {
 		//t3dsCount (42, "S9xGetWord");
 	
@@ -70,14 +70,14 @@ INLINE uint16 __attribute__((always_inline)) S9xGetWordNoCycles (uint32 Address)
 		}
 		else
     {
-				OpenBus = S9xGetByteNoCycles (Address);
-				return (OpenBus | (S9xGetByteNoCycles (Address + 1) << 8));
+				OpenBus = S9xGetByte (Address);
+				return (OpenBus | (S9xGetByte (Address + 1) << 8));
     }
 }
 
 
 
-INLINE void __attribute__((always_inline)) S9xSetByteNoCycles (uint8 Byte, uint32 Address)
+INLINE void __attribute__((always_inline)) S9xSetByte (uint8 Byte, uint32 Address)
 {
 		//t3dsCount (43, "S9xSetByte");
 	
@@ -108,14 +108,14 @@ INLINE void __attribute__((always_inline)) S9xSetByteNoCycles (uint8 Byte, uint3
 }
 
 
-INLINE void __attribute__((always_inline)) S9xSetWordNoCycles (uint16 Word, uint32 Address)
+INLINE void __attribute__((always_inline)) S9xSetWord (uint16 Word, uint32 Address)
 {
 		//t3dsCount (44, "S9xSetWord");
 	
 		if((Address & 0x0FFF)==0x0FFF)
 		{
-				S9xSetByteNoCycles(Word&0x00FF, Address);
-				S9xSetByteNoCycles(Word>>8, Address+1);
+				S9xSetByte(Word&0x00FF, Address);
+				S9xSetByte(Word>>8, Address+1);
 				return;
 		}
 

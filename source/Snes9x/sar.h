@@ -5,9 +5,7 @@
 
 #include "port.h"
 
-#ifndef snes9x_types_defined
-#include "9xtypes.h"
-#endif
+
 
 #ifdef RIGHTSHIFT_IS_SAR
 #define SAR(b, n) ((b)>>(n))
