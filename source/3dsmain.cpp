@@ -182,7 +182,7 @@ SMenuItem optionsForFont[] = {
 };
 
 SMenuItem optionsForStretch[] = {
-    MENU_MAKE_DIALOG_ACTION (0, "No Stretch",               "'Pixel Perfect'"),
+    MENU_MAKE_DIALOG_ACTION (0, "No Stretch",               "'Pixel Perfect' 1:1"),
     MENU_MAKE_DIALOG_ACTION (7, "Expand to Fit",            "'Pixel Perfect' fit"),
     MENU_MAKE_DIALOG_ACTION (6, "TV-style",                 "Stretch width only to 292px"),
     MENU_MAKE_DIALOG_ACTION (5, "4:3",                      "Stretch width only"),

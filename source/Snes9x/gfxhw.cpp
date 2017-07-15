@@ -4090,7 +4090,8 @@ void S9xUpdateScreenHardware ()
 
 	// Fixed pseudo hi-res (Kirby Dreamland 3)
     GFX.Pseudo = (Memory.FillRAM [0x2133] & 8) != 0 &&
-				 (GFX.r212c & 15) != (GFX.r212d & 15);
+				 (GFX.r212c & 15) != (GFX.r212d & 15) &&
+				 (GFX.r2131 & 0x3f) == 0;
 
     if (IPPU.OBJChanged)
 		S9xSetupOBJ ();

@@ -1,7 +1,10 @@
 #include "copyright.h"
 
+
 #ifndef _BSX_H_
 #define _BSX_H_
+
+#include <fstream>
 
 struct SBSX
 {
@@ -21,18 +24,20 @@ struct SBSX
 	uint8	prevMMC[16];
 	uint8	test2192[32];
 
-	bool	strm1_1st;
-	bool	strm2_1st;
-	int		strm1_num;
-	int		strm2_num;
-
-	FILE	*stream1;
-	FILE	*stream2;
-
 	bool	flash_csr;
 	bool	flash_gsr;
 	bool	flash_bsr;
-	bool	flash_cmd_done;  
+	bool	flash_cmd_done;
+
+	std::ifstream	sat_stream1;
+	std::ifstream	sat_stream2;
+
+	bool	sat_pf_latch1_enable, sat_dt_latch1_enable;
+	bool	sat_pf_latch2_enable, sat_dt_latch2_enable;
+
+	bool	sat_stream1_loaded, sat_stream2_loaded;
+	bool	sat_stream1_first, sat_stream2_first;
+	uint8	sat_stream1_count, sat_stream2_count;
 };
 
 extern struct SBSX	BSX;
@@ -45,8 +50,5 @@ uint8 * S9xGetBasePointerBSX (uint32);
 void S9xInitBSX (void);
 void S9xResetBSX (void);
 void S9xBSXPostLoadState (void);
-uint8 S9xBSXGetRTC (void);
-void S9xBSXSetStream1 (uint8);
-void S9xBSXSetStream2 (uint8);
 
 #endif

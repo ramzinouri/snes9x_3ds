@@ -517,8 +517,7 @@ void impl3dsRunOneFrame(bool firstFrame, bool skipDrawingFrame)
 		gpu3dsSetTextureEnvironmentReplaceTexture0();
 		gpu3dsDisableStencilTest();
 		gpu3dsAddQuadVertexes(
-		0, 0, 400, 240,settings3DS.CropPixels, settings3DS.CropPixels ? settings3DS.CropPixels : 1, 
-		400 - settings3DS.CropPixels, 240 - settings3DS.CropPixels,0.1f);
+		0, 0, 400, 240,0, 0, 400, 240, 0.1f);
 	
 		gpu3dsDrawVertexes();
 	}
@@ -529,7 +528,7 @@ void impl3dsRunOneFrame(bool firstFrame, bool skipDrawingFrame)
 	gpu3dsDisableStencilTest();
 
 	int sWidth = settings3DS.StretchWidth;
-	int sHeight = (settings3DS.StretchHeight == -1 ? PPU.ScreenHeight + 1 : settings3DS.StretchHeight);
+	int sHeight = (settings3DS.StretchHeight == -1 ? PPU.ScreenHeight : settings3DS.StretchHeight);
 	if (sWidth == 04030000)
 		sWidth = sHeight * 4 / 3;
 	else if (sWidth == 01010000)
@@ -553,7 +552,7 @@ void impl3dsRunOneFrame(bool firstFrame, bool skipDrawingFrame)
 
 	gpu3dsAddQuadVertexes(
 		sx0, sy0, sx1, sy1,
-		settings3DS.CropPixels, settings3DS.CropPixels ? settings3DS.CropPixels : 1, 
+		settings3DS.CropPixels, settings3DS.CropPixels ? settings3DS.CropPixels : 0, 
 		256 - settings3DS.CropPixels, PPU.ScreenHeight - settings3DS.CropPixels, 
 		0.1f);
 	gpu3dsDrawVertexes();

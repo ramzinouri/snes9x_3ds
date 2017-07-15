@@ -495,11 +495,10 @@ again:
 		S9xMessage(S9X_ERROR,S9X_ROM_CONFUSING_FORMAT_INFO, "Warning! Hacked Dump!");
 	
 
-    int orig_hi_score, orig_lo_score;
     int hi_score, lo_score;
 	
-    orig_hi_score = hi_score = ScoreHiROM (FALSE);
-    orig_lo_score = lo_score = ScoreLoROM (FALSE);
+    hi_score = ScoreHiROM (FALSE);
+    lo_score = ScoreLoROM (FALSE);
     
     if (HeaderCount == 0 && !Settings.ForceNoHeader &&
 		((hi_score > lo_score && ScoreHiROM (TRUE) > hi_score) ||
@@ -510,43 +509,45 @@ again:
 		S9xMessage (S9X_INFO, S9X_HEADER_WARNING, 
 			"Try specifying the -nhd command line option if the game doesn't work\n");
 		//modifying ROM, so we need to rescore
-		orig_hi_score = hi_score = ScoreHiROM (FALSE);
-		orig_lo_score = lo_score = ScoreLoROM (FALSE);
+		hi_score = ScoreHiROM (FALSE);
+		lo_score = ScoreLoROM (FALSE);
     }
 	
     CalculatedSize = (TotalFileSize / 0x2000) * 0x2000;
     ZeroMemory (ROM + CalculatedSize, MAX_ROM_SIZE - CalculatedSize);
 	
-	if(CalculatedSize >0x400000&&
-		!(ROM[0x7FD5]==0x32&&((ROM[0x7FD6]&0xF0)==0x40)) && //exclude S-DD1
-		!(ROM[0xFFD5]==0x3A&&((ROM[0xFFD6]&0xF0)==0xF0))) //exclude SPC7110
+	if (CalculatedSize > 0x400000 &&
+			(ROM[0x7fd5] + (ROM[0x7fd6] << 8)) != 0x3423 && // exclude SA-1
+			(ROM[0x7fd5] + (ROM[0x7fd6] << 8)) != 0x3523 &&
+			(ROM[0x7fd5] + (ROM[0x7fd6] << 8)) != 0x4332 && // exclude S-DD1
+			(ROM[0x7fd5] + (ROM[0x7fd6] << 8)) != 0x4532 &&
+			(ROM[0xffd5] + (ROM[0xffd6] << 8)) != 0xF93a && // exclude SPC7110
+			(ROM[0xffd5] + (ROM[0xffd6] << 8)) != 0xF53a)
+			ExtendedFormat = YEAH;
+
+	// if both vectors are invalid, it's type 1 interleaved LoROM
+	if (ExtendedFormat == NOPE &&
+		((ROM[0x7ffc] + (ROM[0x7ffd] << 8)) < 0x8000) &&
+		((ROM[0xfffc] + (ROM[0xfffd] << 8)) < 0x8000))
 	{
-		//you might be a Jumbo!
-		ExtendedFormat=YEAH;
+		if (!Settings.ForceInterleaved && !Settings.ForceNotInterleaved)
+			S9xDeinterleaveType1(TotalFileSize, ROM);
 	}
 
-	//If both vectors are invalid, it's type 1 LoROM
-
-	if(ExtendedFormat==NOPE&&((ROM[0x7FFC]|(ROM[0x7FFD]<<8))<0x8000)&&((ROM[0xFFFC]|(ROM[0xFFFD]<<8)) <0x8000))
-		if(!Settings.ForceInterleaved)
-			S9xDeinterleaveType1(TotalFileSize, ROM);
-	
-
 	//CalculatedSize is now set, so rescore
-	orig_hi_score = hi_score = ScoreHiROM (FALSE);
-	orig_lo_score = lo_score = ScoreLoROM (FALSE);
+	hi_score = ScoreHiROM (FALSE);
+	lo_score = ScoreLoROM (FALSE);
 
-	if(NOPE!=ExtendedFormat)
+	if(ExtendedFormat!=NOPE)
 	{
-		int loromscore, hiromscore, swappedlorom, swappedhirom;
-		loromscore=ScoreLoROM(FALSE);
-		hiromscore=ScoreHiROM(FALSE);
+		int swappedlorom, swappedhirom;
+
 		swappedlorom=ScoreLoROM(FALSE, 0x400000);
 		swappedhirom=ScoreHiROM(FALSE, 0x400000);
 
 		//set swapped here.
 
-		if(max(swappedlorom, swappedhirom) >= max(loromscore, hiromscore))
+		if(max(swappedlorom, swappedhirom) >= max(lo_score, hi_score))
 		{
 			ExtendedFormat = BIGFIRST;
 			hi_score=swappedhirom;
@@ -554,14 +555,7 @@ again:
 			RomHeader=ROM+0x400000;
 		}
 		else
-		{
 			ExtendedFormat = SMALLFIRST;
-			lo_score=loromscore;
-			hi_score=hiromscore;
-			RomHeader=ROM;
-		}
-
-
 	}
 
     Interleaved = Settings.ForceInterleaved || Settings.ForceInterleaved2;
@@ -600,7 +594,20 @@ again:
 		LoROM = FALSE;
 		HiROM = TRUE;
     }
-	
+
+	// this two games fail to be detected
+	if (!Settings.ForceHiROM && !Settings.ForceLoROM)
+	{
+		if (strncmp((char *) &ROM[0x7fc0], "YUYU NO QUIZ DE GO!GO!", 22) == 0 ||
+		   (strncmp((char *) &ROM[0xffc0], "BATMAN--REVENGE JOKER",  21) == 0))
+		{
+			LoROM = TRUE;
+			HiROM = FALSE;
+			Interleaved = FALSE;
+			Tales = FALSE;
+		}
+	}
+
     // More 
     if (!Settings.ForceHiROM && !Settings.ForceLoROM &&
 		!Settings.ForceInterleaved && !Settings.ForceInterleaved2 &&
@@ -624,12 +631,6 @@ again:
 			Settings.ForceInterleaved2=true;
 		}
 #endif
-		if (strncmp ((char *) &ROM [0x7fc0], "YUYU NO QUIZ DE GO!GO!", 22) == 0)
-		{
-			LoROM = TRUE;
-			HiROM = FALSE;
-			Interleaved = FALSE;
-		}
     }
 	
     if (!Settings.ForceNotInterleaved && Interleaved)
@@ -1098,9 +1099,7 @@ inline uint32 caCRC32(uint8 *array, uint32 size, register uint32 crc32)
 
 void CMemory::InitROM (bool8 Interleaved)
 {
-#ifndef ZSNES_FX
     SuperFX.nRomBanks = CalculatedSize >> 15;
-#endif
     Settings.MultiPlayer5Master = Settings.MultiPlayer5;
     Settings.MouseMaster = Settings.Mouse;
     Settings.SuperScopeMaster = Settings.SuperScope;
@@ -1115,6 +1114,7 @@ void CMemory::InitROM (bool8 Interleaved)
 	Settings.BS=FALSE;
 	Settings.OBC1=FALSE;
 	Settings.SETA=FALSE;
+	Settings.DSP=0;
 	s7r.DataRomSize = 0;
 	CalculatedChecksum=0;
 	uint8* RomHeader;
@@ -1127,26 +1127,6 @@ void CMemory::InitROM (bool8 Interleaved)
 	if(HiROM)
 		RomHeader+=0x8000;
 
-	if(!Settings.BS)
-	{
-		Settings.BS=(-1!=is_bsx(ROM+0x7FC0));
-	
-		if(Settings.BS)
-		{
-			Memory.LoROM=TRUE;
-			Memory.HiROM=FALSE;
-		}
-
-		else
-		{
-			Settings.BS=(-1!=is_bsx(ROM+0xFFC0));
-			if(Settings.BS)
-			{
-				Memory.HiROM=TRUE;
-				Memory.LoROM=FALSE;
-			}
-		}
-	}
 
     ZeroMemory (BlockIsRAM, MEMMAP_NUM_BLOCKS);
     ZeroMemory (BlockIsROM, MEMMAP_NUM_BLOCKS);
@@ -1158,7 +1138,49 @@ void CMemory::InitROM (bool8 Interleaved)
 	S9xInitBSX(); // Set BS header before parsing
 
 	ParseSNESHeader(RomHeader);
-	
+
+	   // DSP1/2/3/4
+   if (Memory.ROMType == 0x03)
+   {
+      if (Memory.ROMSpeed == 0x30)
+         Settings.DSP = 4; // DSP4
+      else
+         Settings.DSP = 1; // DSP1
+   }
+   else if (Memory.ROMType == 0x05)
+   {
+      if (Memory.ROMSpeed == 0x20)
+         Settings.DSP = 2; // DSP2
+      else if (Memory.ROMSpeed == 0x30 && RomHeader[0x2a] == 0xb2)
+         Settings.DSP = 3; // DSP3
+      else
+         Settings.DSP = 1; // DSP1
+   }
+
+   switch (Settings.DSP)
+   {
+      case 1: // DSP1
+         SetDSP = &DSP1SetByte;
+         GetDSP = &DSP1GetByte;
+         break;
+      case 2: // DSP2
+         SetDSP = &DSP2SetByte;
+         GetDSP = &DSP2GetByte;
+         break;
+      case 3: // DSP3
+         SetDSP = &DSP3SetByte;
+         GetDSP = &DSP3GetByte;
+         break;
+      case 4: // DSP4
+         SetDSP = &DSP4SetByte;
+         GetDSP = &DSP4GetByte;
+         break;
+      default:
+         SetDSP = NULL;
+         GetDSP = NULL;
+         break;
+   }
+
 	// Try to auto-detect the DSP1 chip
 	if (!Settings.ForceNoDSP1 &&
 			(ROMType & 0xf) >= 3 && (ROMType & 0xf0) == 0)
@@ -1177,7 +1199,7 @@ void CMemory::InitROM (bool8 Interleaved)
 		}
 		
 		if (Settings.BS)
-			BSHiROMMap ();
+			;//BSHiROMMap ();
 		else if(Settings.SPC7110)
 		{
 			SPC7110HiROMMap();
@@ -1186,25 +1208,30 @@ void CMemory::InitROM (bool8 Interleaved)
 		{
 			TalesROMMap (Interleaved);
 		}
-		else HiROMMap ();
+		else 
+			HiROMMap ();
     }
     else
     {
 		Settings.SuperFX = Settings.ForceSuperFX;
 		
 		if(ROMType==0x25)
-		{
 			Settings.OBC1=TRUE;
-		}
 
 		//BS-X BIOS
 		if(ROMType==0xE5)
-		{
 			Settings.BS=TRUE;
-		}
 
 		if ((ROMType & 0xf0) == 0x10)
 			Settings.SuperFX = !Settings.ForceNoSuperFX;
+		//OBC1 hack ROM
+		if (strncmp(Memory.ROMName, "METAL COMBAT", 12) == 0 &&
+			Memory.ROMType == 0x13 && Memory.ROMSpeed == 0x42)
+		{
+			Settings.OBC1 = true;
+			Settings.SuperFX = Settings.ForceSuperFX;
+			Memory.ROMSpeed = 0x30;
+		}
 		
 		Settings.SDD1 = Settings.ForceSDD1;
 		if ((ROMType & 0xf0) == 0x40)
@@ -1304,14 +1331,12 @@ void CMemory::InitROM (bool8 Interleaved)
 			AlphaROMMap ();
 		}
 		else if (Settings.BS)
-			BSLoROMMap();
+			;//BSLoROMMap();
 		else LoROMMap ();
     }
 
 	if(Settings.BS)
-	{
 		ROMRegion=0;
-	}
 
 	uint32 sum1 = 0;
 	uint32 sum2 = 0;
@@ -1411,8 +1436,6 @@ void CMemory::InitROM (bool8 Interleaved)
 	IAPU.OneCycle = ONE_APU_CYCLE;
 	Settings.Shutdown = Settings.ShutdownMaster;
 	
-	SetDSP=&DSP1SetByte;
-	GetDSP=&DSP1GetByte;
 
 	ResetSpeedMap();
 	ApplyROMFixes ();
@@ -1651,43 +1674,6 @@ void CMemory::LoROMMap ()
 {
     int c;
     int i;
-    int j;
-	int mask[4];
-	for (j=0; j<4; j++)
-		mask[j]=0x00ff;
-
-	mask[0]=(CalculatedSize/0x8000)-1;
-
-	int x;
-	bool foundZeros;
-	bool pastZeros;
-	
-	for(j=0;j<3;j++)
-	{
-		x=1;
-		foundZeros=false;
-		pastZeros=false;
-
-		mask[j+1]=mask[j];
-
-		while (x>0x100&&!pastZeros)
-		{
-			if(mask[j]&x)
-			{
-				x<<=1;
-				if(foundZeros)
-					pastZeros=true;
-			}
-			else
-			{
-				foundZeros=true;
-				pastZeros=false;
-				mask[j+1]|=x;
-				x<<=1;
-			}
-		}
-	}
-
 
     // Banks 00->3f and 80->bf
     for (c = 0; c < 0x400; c += 16)
@@ -1726,14 +1712,7 @@ void CMemory::LoROMMap ()
 		
 		for (i = c + 8; i < c + 16; i++)
 		{
-			int e=3;
-			int d=c>>4;
-			while(d>mask[0])
-			{
-				d&=mask[e];
-				e--;
-			}
-			Map [i] = Map [i + 0x800] = ROM + (((d)-1)*0x8000);
+			Map [i] = Map [i + 0x800] = &ROM [(c << 11) % CalculatedSize] - 0x8000;
 			BlockIsROM [i] = BlockIsROM [i + 0x800] = TRUE;
 		}
     }
@@ -1758,22 +1737,10 @@ void CMemory::LoROMMap ()
 			Map [i + 0x400] = Map [i + 0xc00] = &ROM [(c << 11) % CalculatedSize];
 		
 		for (i = c + 8; i < c + 16; i++)
-		{
-			int e=3;
-			int d=(c+0x400)>>4;
-			while(d>mask[0])
-			{
-				d&=mask[e];
-				e--;
-			}
-
-			Map [i + 0x400] = Map [i + 0xc00] = ROM + (((d)-1)*0x8000);
-		}
+			Map [i + 0x400] = Map [i + 0xc00] = &ROM [((c << 11) + 0x200000) % CalculatedSize] - 0x8000;
 		
 		for (i = c; i < c + 16; i++)	
-		{
 			BlockIsROM [i + 0x400] = BlockIsROM [i + 0xc00] = TRUE;
-		}
     }
 	
     if (Settings.DSP1Master)
@@ -1785,23 +1752,6 @@ void CMemory::LoROMMap ()
 		}
     }
 
-	int sum=0, k,l, bankcount;
-	bankcount=1<<(ROMSize-7);//Mbits
-
-	//safety for corrupt headers
-	if(bankcount > 128)
-		bankcount = (CalculatedSize/0x8000)/4;
-	bankcount*=4;//to banks
-	bankcount<<=4;//Map banks
-	bankcount+=0x800;//normalize
-	for(k=0x800;k<(bankcount);k+=16)
-	{
-		uint8* bank=0x8000+Map[k+8];
-		for(l=0;l<0x8000;l++)
-			sum+=bank[l];
-	}
-	CalculatedChecksum=sum&0xFFFF;
-
     MapRAM ();
     WriteProtectROM ();
 }
@@ -1810,44 +1760,7 @@ void CMemory::SetaDSPMap ()
 {
     int c;
     int i;
-    int j;
-	int mask[4];
-	for (j=0; j<4; j++)
-		mask[j]=0x00ff;
-
-	mask[0]=(CalculatedSize/0x8000)-1;
-
-	int x;
-	bool foundZeros;
-	bool pastZeros;
-	
-	for(j=0;j<3;j++)
-	{
-		x=1;
-		foundZeros=false;
-		pastZeros=false;
-
-		mask[j+1]=mask[j];
-
-		while (x>0x100&&!pastZeros)
-		{
-			if(mask[j]&x)
-			{
-				x<<=1;
-				if(foundZeros)
-					pastZeros=true;
-			}
-			else
-			{
-				foundZeros=true;
-				pastZeros=false;
-				mask[j+1]|=x;
-				x<<=1;
-			}
-		}
-	}
-
-
+ 
     // Banks 00->3f and 80->bf
     for (c = 0; c < 0x400; c += 16)
     {
@@ -1865,14 +1778,7 @@ void CMemory::SetaDSPMap ()
 		
 		for (i = c + 8; i < c + 16; i++)
 		{
-			int e=3;
-			int d=c>>4;
-			while(d>mask[0])
-			{
-				d&=mask[e];
-				e--;
-			}
-			Map [i] = Map [i + 0x800] = ROM + (((d)-1)*0x8000);
+			Map [i] = Map [i + 0x800] = &ROM [(c << 11) % CalculatedSize] - 0x8000;
 			BlockIsROM [i] = BlockIsROM [i + 0x800] = TRUE;
 		}
     }
@@ -1881,23 +1787,11 @@ void CMemory::SetaDSPMap ()
     for (c = 0; c < 0x400; c += 16)
     {
 		for (i = c + 8; i < c + 16; i++)
-		{
-			int e=3;
-			int d=(c+0x400)>>4;
-			while(d>mask[0])
-			{
-				d&=mask[e];
-				e--;
-			}
-
-			Map [i + 0x400] = Map [i + 0xc00] = ROM + (((d)-1)*0x8000);
-		}
+			Map [i + 0x400] = Map [i + 0xc00] = &ROM [((c << 11) + 0x200000) % CalculatedSize] - 0x8000;
 		
 		//only upper half is ROM
 		for (i = c+8; i < c + 16; i++)	
-		{
 			BlockIsROM [i + 0x400] = BlockIsROM [i + 0xc00] = TRUE;
-		}
     }
 	
 	memset(SRAM, 0, 0x1000);
@@ -1919,22 +1813,6 @@ void CMemory::SetaDSPMap ()
 			BlockIsROM [c+i] = FALSE;
 		}
 	}
-
-	int sum=0, k,l, bankcount;
-	bankcount=1<<(ROMSize-7);//Mbits
-	//safety for corrupt headers
-	if(bankcount > 128)
-		bankcount = (CalculatedSize/0x8000)/4;
-	bankcount*=4;//to banks
-	bankcount<<=4;//Map banks
-	bankcount+=0x800;//normalize
-	for(k=0x800;k<(bankcount);k+=16)
-	{
-		uint8* bank=0x8000+Map[k+8];
-		for(l=0;l<0x8000;l++)
-			sum+=bank[l];
-	}
-	CalculatedChecksum=sum&0xFFFF;
 
     MapRAM ();
     WriteProtectROM ();
@@ -2039,56 +1917,6 @@ void CMemory::HiROMMap ()
 {
     int i;
 	int c;
-        int j;
-
-		int mask[4];
-	for (j=0; j<4; j++)
-		mask[j]=0x00ff;
-
-	// Bug in Snes9x 1.43
-	// This isn't really a bug, but a problem with the SNES ROM's size and header
-	// of Wonder Project (EN translation).
-	//
-	// Doing this solves Wonder Project (En), but does this work for all ROMs? 
-	//
-	if (strcmp(ROMId, "APJJ") == 0)
-	{
-		if (((CalculatedSize / 0x10000) * 0x10000) != CalculatedSize)
-			CalculatedSize = ((CalculatedSize / 0x10000) * 0x10000) + 0x10000;
-	}
-
-	mask[0]=(CalculatedSize/0x10000)-1;
-
-
-	int x;
-	bool foundZeros;
-	bool pastZeros;
-	
-	for(j=0;j<3;j++)
-	{
-		x=1;
-		foundZeros=false;
-		pastZeros=false;
-
-		mask[j+1]=mask[j];
-
-		while (x>0x100&&!pastZeros)
-		{
-			if(mask[j]&x)
-			{
-				x<<=1;
-				if(foundZeros)
-					pastZeros=true;
-			}
-			else
-			{
-				foundZeros=true;
-				pastZeros=false;
-				mask[j+1]|=x;
-				x<<=1;
-			}
-		}
-	}
 
     // Banks 00->3f and 80->bf
     for (c = 0; c < 0x400; c += 16)
@@ -2116,14 +1944,7 @@ void CMemory::HiROMMap ()
 		
 		for (i = c + 8; i < c + 16; i++)
 		{
-			int e=3;
-			int d=c>>4;
-			while(d>mask[0])
-			{
-				d&=mask[e];
-				e--;
-			}
-			Map [i] = Map [i + 0x800] = ROM + (d*0x10000);
+			Map [i] = Map [i + 0x800] = &ROM [(c << 12) % CalculatedSize];
 			BlockIsROM [i] = BlockIsROM [i + 0x800] = TRUE;
 		}
     }
@@ -2146,32 +1967,10 @@ void CMemory::HiROMMap ()
     {
 		for (i = c; i < c + 16; i++)
 		{
-			int e=3;
-			int d=(c)>>4;
-			while(d>mask[0])
-			{
-				d&=mask[e];
-				e--;
-			}
-			Map [i + 0x400] = Map [i + 0xc00] = ROM + (d*0x10000);
+			Map [i + 0x400] = Map [i + 0xc00] = &ROM [(c << 12) % CalculatedSize];
 			BlockIsROM [i + 0x400] = BlockIsROM [i + 0xc00] = TRUE;
 		}
     }
-
-	int bankmax=0x40+ (1<<(ROMSize-6));
-	//safety for corrupt headers
-	if(bankmax > 128)
-		bankmax = 0x80;
-	int sum=0;
-	for(i=0x40;i<bankmax; i++)
-	{
-		uint8 * bank_low=(uint8*)Map[i<<4];
-		for (c=0;c<0x10000; c++)
-		{
-			sum+=bank_low[c];
-		}
-	}
-	CalculatedChecksum=sum&0xFFFF;
 
     MapRAM ();
     WriteProtectROM ();
@@ -3592,35 +3391,15 @@ void CMemory::ApplyROMFixes ()
 
 
 	//Ambiguous chip function pointer assignments
-	DSP1.version=0;
+	DSP1.version=Settings.DSP-1;
 
-	//DSP switching:
-	if(strncmp(ROMName, "DUNGEON MASTER", 14)==0)
-	{
-		//Set DSP-2
-		DSP1.version=1;
-		SetDSP=&DSP2SetByte;
-		GetDSP=&DSP2GetByte;
-	}
 
 	if(strncmp(ROMName, "SD\x0b6\x0de\x0dd\x0c0\x0de\x0d1GX", 10)==0)
 	{
-		//Set DSP-3
-		DSP1.version=2;
 		strncpy(ROMName, "SD Gundam GX", 13);
-		SetDSP = &DSP3SetByte;
-		GetDSP = &DSP3GetByte;
 		DSP3_Reset();
 	}
 
-	if(strncmp(ROMName, "TOP GEAR 3000", 13)==0
-		||strncmp(ROMName, "PLANETS CHAMP TG3000", 20)==0)
-	{
-		//Set DSP-4
-		DSP1.version=3;
-		SetDSP=&DSP4SetByte;
-		GetDSP=&DSP4GetByte;
-	}
 
 	//memory map corrections
 	if(strncmp(ROMName, "XBAND",5)==0)
@@ -3840,6 +3619,9 @@ void CMemory::ApplyROMFixes ()
  
 	// End HDMA hacks
 //#endif
+
+	if(strcmp(ROMName, "ActRaiser-2 USA")==0)
+			Settings.H_Max = (SNES_CYCLES_PER_SCANLINE * 83) / 100;
 
 	
     if (strcmp (ROMId, "ASRJ") == 0 && Settings.CyclesPercentage == 100)
@@ -4506,94 +4288,6 @@ void CMemory::CheckForIPSPatch (const char *rom_filename, bool8 header,
 err_eof:
     if (patch_file) 
 		fclose (patch_file);
-}
-
-int is_bsx(unsigned char *p)
-{
-	unsigned c;
-	
-	if ( p[0x19] & 0x4f )
-		goto notbsx;
-	c = p[0x1a];
-	if ( (c != 0x33) && (c != 0xff) ) // 0x33 = Manufacturer: Nintendo 
-		goto notbsx;
-	c = (p[0x17] << 8) | p[0x16];
-	if ( (c != 0x0000) && (c != 0xffff) )
-	{
-		if ( (c & 0x040f) != 0 )
-			goto notbsx;
-		if ( (c & 0xff) > 0xc0 )
-			goto notbsx;
-	}
-	c = p[0x18];
-	if ( (c & 0xce) || ((c & 0x30)==0) )
-		goto notbsx;
-	if ( (p[0x15] & 0x03) != 0 )
-		goto notbsx;
-	c = p[0x13];
-	if ( (c != 0x00) && (c != 0xff) )
-		goto notbsx;
-	if ( p[0x14] != 0x00 )
-		goto notbsx;
-	if ( bs_name(p) != 0 )
-		goto notbsx;
-	return 0; // It's a Satellaview ROM!
-notbsx:
-	return -1;
-}
-int bs_name(unsigned char *p)
-{
-	unsigned c;
-	int lcount;
-	int numv; // number of valid name characters seen so far
-	numv = 0; 
-	for ( lcount = 16; lcount > 0; lcount-- )
-	{
-		if ( check_char( c = *p++ ) != 0 )
-		{
-			c = *p++;
-			if ( c < 0x20 )
-			{
-				if ( (numv != 0x0b) || (c != 0) ) // Dr. Mario Hack
-					goto notBsName;
-			}
-			
-			numv++;
-			lcount--;
-			continue;
-		}
-		else
-		{
-			if ( c == 0 )
-			{
-				if ( numv == 0 )
-					goto notBsName;
-				continue;
-			}
-			
-			if ( c < 0x20 )
-				goto notBsName;
-			if ( c >= 0x80 )
-			{
-				if ( (c < 0xa0) || ( c >= 0xf0 ) )
-					goto notBsName;
-			}
-			numv++;
-		}
-	}
-	if ( numv > 0 )
-		return 0;
-notBsName:
-	return -1;
-}
-int check_char(unsigned c)
-{
-	if ( ( c & 0x80 ) == 0 )
-		return 0;
-	if ( ( c - 0x20 ) & 0x40 )
-		return 1;
-	else
-		return 0;
 }
 
 void CMemory::ParseSNESHeader(uint8* RomHeader)
