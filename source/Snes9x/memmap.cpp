@@ -1389,24 +1389,18 @@ void CMemory::InitROM (bool8 Interleaved)
     //now take a CRC32
     ROMCRC32 = caCRC32(ROM, CalculatedSize);
 
+	// NTSC/PAL
 	if (Settings.ForceNTSC)
 		Settings.PAL = FALSE;
-    else if (Settings.ForcePAL)
+	else
+	if (Settings.ForcePAL)
 		Settings.PAL = TRUE;
 	else
-	{
-		//Korea refers to South Korea, which uses NTSC
-		switch(ROMRegion)
-		{
-			case 13:
-			case 1:
-			case 0:
-				Settings.PAL=FALSE;
-				break;
-			default: Settings.PAL=TRUE;
-				break;
-		}
-	}
+	if (!Settings.BS && (ROMRegion >= 2) && (ROMRegion <= 12))
+		Settings.PAL = TRUE;
+	else
+		Settings.PAL = FALSE;
+
 	if (Settings.PAL)
 	{
 		Settings.FrameTime = Settings.FrameTimePAL;
@@ -1817,7 +1811,7 @@ void CMemory::SetaDSPMap ()
     MapRAM ();
     WriteProtectROM ();
 }
-
+/*
 void CMemory::BSLoROMMap ()
 {
     int c;
@@ -1878,7 +1872,7 @@ BlockIsRAM [c + 7] = BlockIsRAM [c + 0x807] = TRUE;
 			BlockIsROM [i + 0x400] = BlockIsROM [i + 0xc00] = TRUE;
 		}
     }
-	*/
+	*-/
 	for(c=1;c<=4;c++)
 	{
 		for(i=0;i<16; i++)
@@ -1912,7 +1906,7 @@ BlockIsRAM [c + 7] = BlockIsRAM [c + 0x807] = TRUE;
 
 
 }
-
+*/
 void CMemory::HiROMMap ()
 {
     int i;
@@ -2856,7 +2850,7 @@ void CMemory::SRAM512KLoROMMap ()
     MapExtraRAM ();
     WriteProtectROM ();
 }
-
+/*
 void CMemory::BSHiROMMap ()
 {
     int c;
@@ -2939,7 +2933,7 @@ BlockIsRAM [c + 7] = BlockIsRAM [c + 0x807] = TRUE;
     MapRAM ();
     WriteProtectROM ();
 }
-
+*/
 void CMemory::JumboLoROMMap (bool8 Interleaved)
 {
     int c;
@@ -4292,18 +4286,41 @@ err_eof:
 
 void CMemory::ParseSNESHeader(uint8* RomHeader)
 {
-		Memory.SRAMSize = RomHeader [0x28];
-		strncpy (ROMName, (char *) &RomHeader[0x10], ROM_NAME_LEN - 1);
-		ROMSpeed = RomHeader [0x25];
-		ROMType = RomHeader [0x26];
-		ROMSize = RomHeader [0x27];
-		ROMChecksum = RomHeader [0x2e] + (RomHeader [0x2f] << 8);
-		ROMComplementChecksum = RomHeader [0x2c] + (RomHeader [0x2d] << 8);
-		ROMRegion= RomHeader[0x29];
-		memmove (ROMId, &RomHeader [0x2], 4);
-		if(RomHeader[0x2A]==0x33)
-			memmove (CompanyId, &RomHeader [0], 2);
-		else sprintf(CompanyId, "%02X", RomHeader[0x2A]);
+	bool8	bs = Settings.BS & !Settings.BSXItself;
+
+	strncpy(ROMName, (char *) &RomHeader[0x10], ROM_NAME_LEN - 1);
+	if (bs)
+		memset(ROMName + 16, 0x20, ROM_NAME_LEN - 17);
+
+	if (bs)
+	{
+		if (!(((RomHeader[0x29] & 0x20) && CalculatedSize <  0x100000) ||
+			 (!(RomHeader[0x29] & 0x20) && CalculatedSize == 0x100000)))
+			printf("BS: Size mismatch\n");
+
+		// FIXME
+		int	p = 0;
+		while ((1 << p) < (int) CalculatedSize)
+			p++;
+		ROMSize = p - 10;
+	}
+	else
+		ROMSize = RomHeader[0x27];
+
+	SRAMSize  = bs ? 5 /* BS-X */    : RomHeader[0x28];
+	ROMSpeed  = bs ? RomHeader[0x28] : RomHeader[0x25];
+	ROMType   = bs ? 0xE5 /* BS-X */ : RomHeader[0x26];
+	ROMRegion = bs ? 0               : RomHeader[0x29];
+
+	ROMChecksum           = RomHeader[0x2E] + (RomHeader[0x2F] << 8);
+	ROMComplementChecksum = RomHeader[0x2C] + (RomHeader[0x2D] << 8);
+
+	memmove(ROMId, &RomHeader[0x02], 4);
+
+	if(RomHeader[0x2A]==0x33)
+		memmove (CompanyId, &RomHeader [0], 2);
+	else 
+		sprintf(CompanyId, "%02X", RomHeader[0x2A]);
 }
 
 #undef INLINE

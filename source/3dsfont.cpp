@@ -1,5 +1,4 @@
-#include "3ds.h"
-#include "snes9x.h"
+
 uint8 fontTempestaWidth[256] = {
 /* 0 */ 3,
 /* 1 */ 3,

@@ -1,5 +1,5 @@
-
 #include "3dsconfig.h"
+#include <stdio.h>
 
 static FILE    *fp = NULL;
 static bool    WriteMode = false;    

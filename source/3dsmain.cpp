@@ -1,39 +1,20 @@
-#include <algorithm>
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
-#include <ctime>
-#include <vector>
-
-#include <unistd.h>
-#include <string.h>
-#include <stdio.h>
 #include <3ds.h>
 
 #include <dirent.h>
 #include "snes9x.h"
-#include "memmap.h"
-#include "apu.h"
-#include "gfx.h"
-#include "snapshot.h"
 #include "cheats.h"
-//#include "display.h"
-#include "soundux.h"
+
 
 #include "3dsexit.h"
-#include "3dsgpu.h"
 #include "3dsopt.h"
 #include "3dssound.h"
 #include "3dsmenu.h"
 #include "3dsui.h"
-#include "3dsfont.h"
 #include "3dsconfig.h"
 #include "3dsfiles.h"
 #include "3dsinput.h"
 #include "3dssettings.h"
 #include "3dsimpl.h"
-#include "3dsimpl_tilecache.h"
-#include "3dsimpl_gpu.h"
 
 #include "lodepng.h"
 #include "3dsthemes.h"
@@ -49,20 +30,9 @@ S9xSettings3DS settings3DS;
 int frameCount60 = 60;
 u64 frameCountTick = 0;
 int framesSkippedCount = 0;
-char *romFileName = 0;
+char *romFileName = NULL;
 char romFileNameFullPath[_MAX_PATH];
 char romFileNameLastSelected[_MAX_PATH];
-
-//----------------------------------------------------------------------
-// Checks if file exists.
-//----------------------------------------------------------------------
-bool IsFileExists(const char * filename) {
-    if (FILE * file = fopen(filename, "r")) {
-        fclose(file);
-        return true;
-    }
-    return false;
-}
 
 
 
@@ -110,7 +80,6 @@ void clearTopScreenWithLogo()
         free(image);
     }
 }
-
 
 
 
@@ -487,10 +456,8 @@ bool settingsReadWriteFullListGlobal(bool writeMode)
 
     config3dsReadWriteInt32("ScreenStretch=%d\n", &settings3DS.ScreenStretch, 0, 7);
     config3dsReadWriteInt32("HideUnnecessaryBottomScrText=%d\n", &settings3DS.HideUnnecessaryBottomScrText, 0, 1);
-    config3dsReadWriteInt32("DisableBorder=%d\n", &settings3DS.DisableBorder, 0, 1);
-    config3dsReadWriteInt32("Disable3DSlider=%d\n", &settings3DS.Disable3DSlider, 0, 1);
     config3dsReadWriteInt32("Font=%d\n", &settings3DS.Font, 0, 2);
-    config3dsReadWriteInt32("Theme=%d\n", &settings3DS.Theme, 0, TOTALTHEMECOUNT-1);
+    
 
     // Fixes the bug where we have spaces in the directory name
     config3dsReadWriteString("Dir=%s\n", "Dir=%1000[^\n]s\n", file3dsGetCurrentDir());
@@ -499,6 +466,9 @@ bool settingsReadWriteFullListGlobal(bool writeMode)
     config3dsReadWriteInt32("AutoSavestate=%d\n", &settings3DS.AutoSavestate, 0, 1);
 
     // All new options should come here!
+    config3dsReadWriteInt32("DisableBorder=%d\n", &settings3DS.DisableBorder, 0, 1);
+    config3dsReadWriteInt32("Disable3DSlider=%d\n", &settings3DS.Disable3DSlider, 0, 1);
+    config3dsReadWriteInt32("Theme=%d\n", &settings3DS.Theme, 0, TOTALTHEMECOUNT-1);
 
     config3dsCloseFile();
     return true;

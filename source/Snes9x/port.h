@@ -5,53 +5,12 @@
 #define _PORT_H_
 
 #include <limits.h>
-
-#ifndef STORM
-//#include <memory.h>
 #include <string.h>
-#else
-#include <strings.h>
-#include <clib/powerpc_protos.h>
-#endif
-
-#ifndef ACCEPT_SIZE_T
-#ifdef __WIN32__
-#define ACCEPT_SIZE_T int
-#else
-#define ACCEPT_SIZE_T unsigned int
-#endif
-#endif
-
 #include <sys/types.h>
 
 /* #define PIXEL_FORMAT RGB565 */
 #define GFX_MULTI_FORMAT
 
-#if defined(TARGET_OS_MAC) && TARGET_OS_MAC
-
-#include "zlib.h"
-#define ZLIB
-#define EXECUTE_SUPERFX_PER_LINE
-#define SOUND
-#define VAR_CYCLES
-//#define CPU_SHUTDOWN
-#define SPC700_SHUTDOWN
-#define PIXEL_FORMAT RGB555
-#define CHECK_SOUND()
-#define M_PI 3.14159265359
-#undef  _MAX_PATH
-
-#undef DEBUGGER /* Apple Universal Headers sometimes #define DEBUGGER */
-#undef GFX_MULTI_FORMAT
-
-int    strncasecmp(const char *s1, const char *s2, unsigned n);
-int    strcasecmp(const char *s1, const char *s2 );
-
-#endif /* TARGET_OS_MAC */
-
-#ifndef NOASM
-#define USE_X86_ASM
-#endif
 
 #ifndef snes9x_types_defined
 #define snes9x_types_defined
@@ -59,7 +18,7 @@ int    strcasecmp(const char *s1, const char *s2 );
 typedef unsigned char bool8;
 
 /* FIXME: Refactor this by moving out the BORLAND part and unifying typedefs */
-#ifndef __WIN32__
+
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef signed char int8;
@@ -70,32 +29,7 @@ typedef unsigned int uint32;
 __extension__
 # endif
 typedef long long int64;
-#else /* __WIN32__ */
 
-# ifdef __BORLANDC__
-#   include <systypes.h>
-# else
-
-typedef unsigned char uint8;
-typedef unsigned short uint16;
-typedef signed char int8;
-typedef short int16;
-
-# ifndef WSAAPI
-/* winsock2.h typedefs int32 as well. */
-typedef long int32;
-
-#   define PLAT_SOUND_BUFFER SoundBuffer
-#   define RIGHTSHIFT_IS_SAR
-# endif
-
-typedef unsigned int uint32;
-
-# endif /* __BORLANDC__ */
-
-typedef __int64 int64;
-
-#endif /* __WIN32__ */
 #endif /* snes9x_types_defined */
 
 
@@ -125,7 +59,6 @@ typedef __int64 int64;
 #endif
 #endif
 
-#ifndef __WIN32__
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
@@ -143,10 +76,8 @@ void _makepath (char *path, const char *drive, const char *dir,
 		const char *fname, const char *ext);
 void _splitpath (const char *path, char *drive, char *dir, char *fname,
 		 char *ext);
-#else /* __WIN32__ */
-#define strcasecmp stricmp
-#define strncasecmp strnicmp
-#endif
+
+
 
 EXTERN_C void S9xGenerateSound ();
 
@@ -159,13 +90,10 @@ EXTERN_C void MixSound(void);
 #define CHECK_SOUND()
 #endif
 
-#ifdef __DJGPP
-#define SLASH_STR "\\"
-#define SLASH_CHAR '\\'
-#else
+
 #define SLASH_STR "/"
 #define SLASH_CHAR '/'
-#endif
+
 
 /* Taken care of in signal.h on Linux.
  * #ifdef __linux
@@ -187,17 +115,7 @@ EXTERN_C void MixSound(void);
 #define MSB_FIRST
 #endif
 
-#ifdef __sun
-#define TITLE "Snes9X: Solaris"
-#endif
 
-#ifdef __linux
-#define TITLE "Snes9X: Linux"
-#endif
-
-#ifndef TITLE
-#define TITLE "Snes9x"
-#endif
 
 #ifdef STORM
 #define STATIC

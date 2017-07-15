@@ -37,4 +37,9 @@ void file3dsGoToChildDirectory(char *childDir);
 //----------------------------------------------------------------------
 std::vector<std::string> file3dsGetFiles(char *extensions, int maxFiles);
 
+//----------------------------------------------------------------------
+// Checks if file exists.
+//----------------------------------------------------------------------
+bool IsFileExists(const char * filename);
+
 #endif

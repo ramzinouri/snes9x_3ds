@@ -1,12 +1,8 @@
-#include <stdlib.h>
-#include <3ds.h>
-
 #include "3dsexit.h"
-#include "3dsgpu.h"
 #include "3dssettings.h"
 #include "3dssound.h"
 #include "memmap.h"
-#include "snes9x.h"
+
 
 aptHookCookie hookCookie;
 int appExiting = 0;

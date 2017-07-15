@@ -1,12 +1,4 @@
-#include <3ds.h>
-#include <algorithm>
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
-#include <ctime>
-#include <vector>
-#include <string.h>
-#include <stdio.h>
+//#include <3ds.h>
 
 
 #define _3DSGPU_CPP_
@@ -15,6 +7,8 @@
 #include "3dsgpu.h"
 #include "3dsfiles.h"
 #include "3dsimpl.h"
+#include "3dsmatrix.h"
+
 
 #ifndef M_PI
 #define	M_PI		3.14159265358979323846

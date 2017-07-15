@@ -4,7 +4,6 @@
 
 #include <3ds.h>
 #include "gpulib.h"
-#include "3dsmatrix.h"
 #include "3dssnes9x.h"
 #include "gfx.h"
 

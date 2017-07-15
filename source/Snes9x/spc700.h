@@ -4,12 +4,6 @@
 #ifndef _SPC700_H_
 #define _SPC700_H_
 
-#ifdef SPCTOOL
-#define NO_CHANNEL_STRUCT
-#include "spctool/dsp.h"
-#include "spctool/spc700.h"
-#include "spctool/soundmod.h"
-#endif
 
 #define Carry       1
 #define Zero        2

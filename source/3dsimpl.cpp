@@ -3,10 +3,6 @@
 // and the main emulator core.
 //=============================================================================
 
-#include <unistd.h>
-#include <string.h>
-#include <stdio.h>
-#include <3ds.h>
 
 #include <dirent.h>
 #include "snes9x.h"

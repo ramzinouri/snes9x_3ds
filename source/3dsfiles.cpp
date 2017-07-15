@@ -1,19 +1,10 @@
 #include <algorithm>
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
-#include <ctime>
-#include <vector>
 
 #include <unistd.h>
-#include <string.h>
-#include <stdio.h>
-#include <3ds.h>
 #include <dirent.h>
 
 #include "port.h"
 #include "3dsfiles.h"
-
 
 static char currentDir[_MAX_PATH] = "";
 
@@ -58,6 +49,16 @@ void file3dsGoToParentDirectory(void)
     }
 }
 
+//----------------------------------------------------------------------
+// Checks if file exists.
+//----------------------------------------------------------------------
+bool IsFileExists(const char * filename) {
+    if (FILE * file = fopen(filename, "r")) {
+        fclose(file);
+        return true;
+    }
+    return false;
+}
 
 //----------------------------------------------------------------------
 // Go up to the child directory.
