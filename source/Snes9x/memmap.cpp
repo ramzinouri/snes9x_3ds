@@ -15,17 +15,15 @@
 #include "cheats.h"
 #include "apu.h"
 #include "sa1.h"
-#include "dsp1.h"
+#include "dsp.h"
 #include "srtc.h"
 #include "sdd1.h"
 #include "spc7110.h"
 #include "seta.h"
 #include "bsx.h"
 
-#include "3dsmenu.h"
 #include "3dsimpl.h"
-
-#include "unzip.h"
+#include "3dsfiles.h"
 
 
 #include "fxemu.h"
@@ -722,6 +720,8 @@ again:
 
 uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 {
+	return FileLoader3ds(buffer,  filename, maxsize);
+/*
 	STREAM ROMFile;
 	int32 TotalFileSize = 0;
 	int len = 0;
@@ -756,8 +756,6 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 	{
 	case FILE_ZIP:
 	{
-
-
 		file = unzOpen(fname);
 
 	    zip_file = unzOpen(filename);
@@ -770,7 +768,6 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 
             p = (char*)(strrchr(snes_file, '.') + 1);
 
-
                 if (strcasecmp(p, "smc") == 0) break;
                 if (strcasecmp(p, "sfc") == 0) break;
                 if (strcasecmp(p, "swc") == 0) break;
@@ -779,7 +776,6 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
                 if (unzGoToNextFile(zip_file) != UNZ_OK) return FALSE;
          }                
          unzOpenCurrentFile (zip_file);
-
          
 		FileSize = unzinfo.uncompressed_size;	 	 	 
 
@@ -882,7 +878,7 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 		break;
 	}
 	return TotalFileSize;
-
+*/
 }
 
 #if 0
@@ -1158,28 +1154,55 @@ void CMemory::InitROM (bool8 Interleaved)
    }
 
    switch (Settings.DSP)
-   {
-      case 1: // DSP1
-         SetDSP = &DSP1SetByte;
-         GetDSP = &DSP1GetByte;
-         break;
-      case 2: // DSP2
-         SetDSP = &DSP2SetByte;
-         GetDSP = &DSP2GetByte;
-         break;
-      case 3: // DSP3
-         SetDSP = &DSP3SetByte;
-         GetDSP = &DSP3GetByte;
-         break;
-      case 4: // DSP4
-         SetDSP = &DSP4SetByte;
-         GetDSP = &DSP4GetByte;
-         break;
-      default:
-         SetDSP = NULL;
-         GetDSP = NULL;
-         break;
-   }
+	{
+		case 1:	// DSP1
+			if (HiROM)
+			{
+				DSP0.boundary = 0x7000;
+				DSP0.maptype = M_DSP1_HIROM;
+			}
+			else
+			if (CalculatedSize > 0x100000)
+			{
+				DSP0.boundary = 0x4000;
+				DSP0.maptype = M_DSP1_LOROM_L;
+			}
+			else
+			{
+				DSP0.boundary = 0xc000;
+				DSP0.maptype = M_DSP1_LOROM_S;
+			}
+
+			SetDSP = &DSP1SetByte;
+			GetDSP = &DSP1GetByte;
+			break;
+
+		case 2: // DSP2
+			DSP0.boundary = 0x10000;
+			DSP0.maptype = M_DSP2_LOROM;
+			SetDSP = &DSP2SetByte;
+			GetDSP = &DSP2GetByte;
+			break;
+
+		case 3: // DSP3
+			DSP0.boundary = 0xc000;
+			DSP0.maptype = M_DSP3_LOROM;
+			SetDSP = &DSP3SetByte;
+			GetDSP = &DSP3GetByte;
+			break;
+
+		case 4: // DSP4
+			DSP0.boundary = 0xc000;
+			DSP0.maptype = M_DSP4_LOROM;
+			SetDSP = &DSP4SetByte;
+			GetDSP = &DSP4GetByte;
+			break;
+
+		default:
+			SetDSP = NULL;
+			GetDSP = NULL;
+			break;
+	}
 
 	// Try to auto-detect the DSP1 chip
 	if (!Settings.ForceNoDSP1 &&
@@ -3218,7 +3241,7 @@ const char *CMemory::KartContents ()
 		if (ROMType & 0xf0) 
 			sprintf (tmp, "%s+%s", tmp, CoPro [(ROMType & 0xf0) >> 4]);
 		else
-			sprintf (tmp, "%s+%s", tmp, DSPSel [DSP1.version]);
+			sprintf (tmp, "%s+%s", tmp, DSPSel [Settings.DSP-1]);
 	}
 	
     return (tmp);
@@ -3385,7 +3408,7 @@ void CMemory::ApplyROMFixes ()
 
 
 	//Ambiguous chip function pointer assignments
-	DSP1.version=Settings.DSP-1;
+	//DSP1.version=Settings.DSP-1;
 
 
 	if(strncmp(ROMName, "SD\x0b6\x0de\x0dd\x0c0\x0de\x0d1GX", 10)==0)
@@ -3666,185 +3689,187 @@ void CMemory::ApplyROMFixes ()
     SA1.WaitByteAddress1 = NULL;
     SA1.WaitByteAddress2 = NULL;
 	
-    /* Bass Fishing */
-    if (strcmp (ROMId, "ZBPJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x0093f1 >> MEMMAP_SHIFT] + 0x93f1;
-		SA1.WaitByteAddress1 = FillRAM + 0x304a;
-    }
-    /* DAISENRYAKU EXPERTWW2 */
-    if (strcmp (ROMId, "AEVJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x0ed18d >> MEMMAP_SHIFT] + 0xd18d;
-		SA1.WaitByteAddress1 = FillRAM + 0x3000;
-    }
-    /* debjk2 */
-    if (strcmp (ROMId, "A2DJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x008b62 >> MEMMAP_SHIFT] + 0x8b62;
-    }
-    /* Dragon Ballz HD */
-    if (strcmp (ROMId, "AZIJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x008083 >> MEMMAP_SHIFT] + 0x8083;
-		SA1.WaitByteAddress1 = FillRAM + 0x3020;
-    }
-    /* SFC SDGUNDAMGNEXT */
-    if (strcmp (ROMId, "ZX3J") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x0087f2 >> MEMMAP_SHIFT] + 0x87f2;
-		SA1.WaitByteAddress1 = FillRAM + 0x30c4;
-		SA1.WaitByteAddress1 = FillRAM + 0x30b0;
-    }
-    /* ShougiNoHanamichi */
-    if (strcmp (ROMId, "AARJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0xc1f85a >> MEMMAP_SHIFT] + 0xf85a;
-		SA1.WaitByteAddress1 = SRAM + 0x0c64;
-		SA1.WaitByteAddress2 = SRAM + 0x0c66;
-    }
-    /* KATO HIFUMI9DAN SYOGI */
-    if (strcmp (ROMId, "A23J") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0xc25037 >> MEMMAP_SHIFT] + 0x5037;
-		SA1.WaitByteAddress1 = SRAM + 0x0c06;
-		SA1.WaitByteAddress2 = SRAM + 0x0c08;
-    }
-    /* idaten */
-    if (strcmp (ROMId, "AIIJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0xc100be >> MEMMAP_SHIFT] + 0x00be;
-		SA1.WaitByteAddress1 = SRAM + 0x1002;
-		SA1.WaitByteAddress2 = SRAM + 0x1004;
-    }
-    /* igotais */
-    if (strcmp (ROMId, "AITJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x0080b7 >> MEMMAP_SHIFT] + 0x80b7;
-    }
-    /* J96 DREAM STADIUM */
-    if (strcmp (ROMId, "AJ6J") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0xc0f74a >> MEMMAP_SHIFT] + 0xf74a;
-    }
-    /* JumpinDerby */
-    if (strcmp (ROMId, "AJUJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x00d926 >> MEMMAP_SHIFT] + 0xd926;
-    }
-    /* JKAKINOKI SHOUGI */
-    if (strcmp (ROMId, "AKAJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x00f070 >> MEMMAP_SHIFT] + 0xf070;
-    }
-    /* HOSHI NO KIRBY 3 & KIRBY'S DREAM LAND 3 JAP & US */
-    if (strcmp (ROMId, "AFJJ") == 0 || strcmp (ROMId, "AFJE") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x0082d4 >> MEMMAP_SHIFT] + 0x82d4;
-		SA1.WaitByteAddress1 = SRAM + 0x72a4;
-    }
-    /* KIRBY SUPER DELUXE JAP */
-    if (strcmp (ROMId, "AKFJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x008c93 >> MEMMAP_SHIFT] + 0x8c93;
-		SA1.WaitByteAddress1 = FillRAM + 0x300a;
-		SA1.WaitByteAddress2 = FillRAM + 0x300e;
-    }
-    /* KIRBY SUPER DELUXE US */
-    if (strcmp (ROMId, "AKFE") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x008cb8 >> MEMMAP_SHIFT] + 0x8cb8;
-		SA1.WaitByteAddress1 = FillRAM + 0x300a;
-		SA1.WaitByteAddress2 = FillRAM + 0x300e;
-    }
-    /* SUPER MARIO RPG JAP & US */
-    if (strcmp (ROMId, "ARWJ") == 0 || strcmp (ROMId, "ARWE") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0xc0816f >> MEMMAP_SHIFT] + 0x816f;
-		SA1.WaitByteAddress1 = FillRAM + 0x3000;
-    }
-    /* marvelous.zip */
-    if (strcmp (ROMId, "AVRJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x0085f2 >> MEMMAP_SHIFT] + 0x85f2;
-		SA1.WaitByteAddress1 = FillRAM + 0x3024;
-    }
-    /* AUGUSTA3 MASTERS NEW */
-    if (strcmp (ROMId, "AO3J") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x00dddb >> MEMMAP_SHIFT] + 0xdddb;
-		SA1.WaitByteAddress1 = FillRAM + 0x37b4;
-    }
-    /* OSHABERI PARODIUS */
-    if (strcmp (ROMId, "AJOJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x8084e5 >> MEMMAP_SHIFT] + 0x84e5;
-    }
-    /* PANIC BOMBER WORLD */
-    if (strcmp (ROMId, "APBJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x00857a >> MEMMAP_SHIFT] + 0x857a;
-    }
-    /* PEBBLE BEACH NEW */
-    if (strcmp (ROMId, "AONJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x00df33 >> MEMMAP_SHIFT] + 0xdf33;
-		SA1.WaitByteAddress1 = FillRAM + 0x37b4;
-    }
-    /* PGA EUROPEAN TOUR */
-    if (strcmp (ROMId, "AEPE") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x003700 >> MEMMAP_SHIFT] + 0x3700;
-		SA1.WaitByteAddress1 = FillRAM + 0x3102;
-    }
-    /* PGA TOUR 96 */
-    if (strcmp (ROMId, "A3GE") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x003700 >> MEMMAP_SHIFT] + 0x3700;
-		SA1.WaitByteAddress1 = FillRAM + 0x3102;
-    }
-    /* POWER RANGERS 4 */
-    if (strcmp (ROMId, "A4RE") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x009899 >> MEMMAP_SHIFT] + 0x9899;
-		SA1.WaitByteAddress1 = FillRAM + 0x3000;
-    }
-    /* PACHISURO PALUSUPE */
-    if (strcmp (ROMId, "AGFJ") == 0)
-    {
-		// Never seems to turn on the SA-1!
-    }
-    /* SD F1 GRAND PRIX */
-    if (strcmp (ROMId, "AGFJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x0181bc >> MEMMAP_SHIFT] + 0x81bc;
-    }
-    /* SHOUGI MARJONG */
-    if (strcmp (ROMId, "ASYJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x00f2cc >> MEMMAP_SHIFT] + 0xf2cc;
-		SA1.WaitByteAddress1 = SRAM + 0x7ffe;
-		SA1.WaitByteAddress2 = SRAM + 0x7ffc;
-    }
-    /* shogisai2 */
-    if (strcmp (ROMId, "AX2J") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0x00d675 >> MEMMAP_SHIFT] + 0xd675;
-    }
-	
-    /* SHINING SCORPION */
-    if (strcmp (ROMId, "A4WJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0xc048be >> MEMMAP_SHIFT] + 0x48be;
-    }
-    /* SHIN SHOUGI CLUB */
-    if (strcmp (ROMId, "AHJJ") == 0)
-    {
-		SA1.WaitAddress = SA1.Map [0xc1002a >> MEMMAP_SHIFT] + 0x002a;
-		SA1.WaitByteAddress1 = SRAM + 0x0806;
-		SA1.WaitByteAddress2 = SRAM + 0x0808;
-    }
-	
+	if (Settings.SA1)
+   {
+		/* Bass Fishing */
+		if (strcmp (ROMId, "ZBPJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x0093f1 >> MEMMAP_SHIFT] + 0x93f1;
+			SA1.WaitByteAddress1 = FillRAM + 0x304a;
+		}
+		/* DAISENRYAKU EXPERTWW2 */
+		if (strcmp (ROMId, "AEVJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x0ed18d >> MEMMAP_SHIFT] + 0xd18d;
+			SA1.WaitByteAddress1 = FillRAM + 0x3000;
+		}
+		/* debjk2 */
+		if (strcmp (ROMId, "A2DJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x008b62 >> MEMMAP_SHIFT] + 0x8b62;
+		}
+		/* Dragon Ballz HD */
+		if (strcmp (ROMId, "AZIJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x008083 >> MEMMAP_SHIFT] + 0x8083;
+			SA1.WaitByteAddress1 = FillRAM + 0x3020;
+		}
+		/* SFC SDGUNDAMGNEXT */
+		if (strcmp (ROMId, "ZX3J") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x0087f2 >> MEMMAP_SHIFT] + 0x87f2;
+			SA1.WaitByteAddress1 = FillRAM + 0x30c4;
+			SA1.WaitByteAddress1 = FillRAM + 0x30b0;
+		}
+		/* ShougiNoHanamichi */
+		if (strcmp (ROMId, "AARJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0xc1f85a >> MEMMAP_SHIFT] + 0xf85a;
+			SA1.WaitByteAddress1 = SRAM + 0x0c64;
+			SA1.WaitByteAddress2 = SRAM + 0x0c66;
+		}
+		/* KATO HIFUMI9DAN SYOGI */
+		if (strcmp (ROMId, "A23J") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0xc25037 >> MEMMAP_SHIFT] + 0x5037;
+			SA1.WaitByteAddress1 = SRAM + 0x0c06;
+			SA1.WaitByteAddress2 = SRAM + 0x0c08;
+		}
+		/* idaten */
+		if (strcmp (ROMId, "AIIJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0xc100be >> MEMMAP_SHIFT] + 0x00be;
+			SA1.WaitByteAddress1 = SRAM + 0x1002;
+			SA1.WaitByteAddress2 = SRAM + 0x1004;
+		}
+		/* igotais */
+		if (strcmp (ROMId, "AITJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x0080b7 >> MEMMAP_SHIFT] + 0x80b7;
+		}
+		/* J96 DREAM STADIUM */
+		if (strcmp (ROMId, "AJ6J") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0xc0f74a >> MEMMAP_SHIFT] + 0xf74a;
+		}
+		/* JumpinDerby */
+		if (strcmp (ROMId, "AJUJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x00d926 >> MEMMAP_SHIFT] + 0xd926;
+		}
+		/* JKAKINOKI SHOUGI */
+		if (strcmp (ROMId, "AKAJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x00f070 >> MEMMAP_SHIFT] + 0xf070;
+		}
+		/* HOSHI NO KIRBY 3 & KIRBY'S DREAM LAND 3 JAP & US */
+		if (strcmp (ROMId, "AFJJ") == 0 || strcmp (ROMId, "AFJE") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x0082d4 >> MEMMAP_SHIFT] + 0x82d4;
+			SA1.WaitByteAddress1 = SRAM + 0x72a4;
+		}
+		/* KIRBY SUPER DELUXE JAP */
+		if (strcmp (ROMId, "AKFJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x008c93 >> MEMMAP_SHIFT] + 0x8c93;
+			SA1.WaitByteAddress1 = FillRAM + 0x300a;
+			SA1.WaitByteAddress2 = FillRAM + 0x300e;
+		}
+		/* KIRBY SUPER DELUXE US */
+		if (strcmp (ROMId, "AKFE") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x008cb8 >> MEMMAP_SHIFT] + 0x8cb8;
+			SA1.WaitByteAddress1 = FillRAM + 0x300a;
+			SA1.WaitByteAddress2 = FillRAM + 0x300e;
+		}
+		/* SUPER MARIO RPG JAP & US */
+		if (strcmp (ROMId, "ARWJ") == 0 || strcmp (ROMId, "ARWE") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0xc0816f >> MEMMAP_SHIFT] + 0x816f;
+			SA1.WaitByteAddress1 = FillRAM + 0x3000;
+		}
+		/* marvelous.zip */
+		if (strcmp (ROMId, "AVRJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x0085f2 >> MEMMAP_SHIFT] + 0x85f2;
+			SA1.WaitByteAddress1 = FillRAM + 0x3024;
+		}
+		/* AUGUSTA3 MASTERS NEW */
+		if (strcmp (ROMId, "AO3J") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x00dddb >> MEMMAP_SHIFT] + 0xdddb;
+			SA1.WaitByteAddress1 = FillRAM + 0x37b4;
+		}
+		/* OSHABERI PARODIUS */
+		if (strcmp (ROMId, "AJOJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x8084e5 >> MEMMAP_SHIFT] + 0x84e5;
+		}
+		/* PANIC BOMBER WORLD */
+		if (strcmp (ROMId, "APBJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x00857a >> MEMMAP_SHIFT] + 0x857a;
+		}
+		/* PEBBLE BEACH NEW */
+		if (strcmp (ROMId, "AONJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x00df33 >> MEMMAP_SHIFT] + 0xdf33;
+			SA1.WaitByteAddress1 = FillRAM + 0x37b4;
+		}
+		/* PGA EUROPEAN TOUR */
+		if (strcmp (ROMId, "AEPE") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x003700 >> MEMMAP_SHIFT] + 0x3700;
+			SA1.WaitByteAddress1 = FillRAM + 0x3102;
+		}
+		/* PGA TOUR 96 */
+		if (strcmp (ROMId, "A3GE") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x003700 >> MEMMAP_SHIFT] + 0x3700;
+			SA1.WaitByteAddress1 = FillRAM + 0x3102;
+		}
+		/* POWER RANGERS 4 */
+		if (strcmp (ROMId, "A4RE") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x009899 >> MEMMAP_SHIFT] + 0x9899;
+			SA1.WaitByteAddress1 = FillRAM + 0x3000;
+		}
+		/* PACHISURO PALUSUPE */
+		if (strcmp (ROMId, "AGFJ") == 0)
+		{
+			// Never seems to turn on the SA-1!
+		}
+		/* SD F1 GRAND PRIX */
+		if (strcmp (ROMId, "AGFJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x0181bc >> MEMMAP_SHIFT] + 0x81bc;
+		}
+		/* SHOUGI MARJONG */
+		if (strcmp (ROMId, "ASYJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x00f2cc >> MEMMAP_SHIFT] + 0xf2cc;
+			SA1.WaitByteAddress1 = SRAM + 0x7ffe;
+			SA1.WaitByteAddress2 = SRAM + 0x7ffc;
+		}
+		/* shogisai2 */
+		if (strcmp (ROMId, "AX2J") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0x00d675 >> MEMMAP_SHIFT] + 0xd675;
+		}
+		
+		/* SHINING SCORPION */
+		if (strcmp (ROMId, "A4WJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0xc048be >> MEMMAP_SHIFT] + 0x48be;
+		}
+		/* SHIN SHOUGI CLUB */
+		if (strcmp (ROMId, "AHJJ") == 0)
+		{
+			SA1.WaitAddress = SA1.Map [0xc1002a >> MEMMAP_SHIFT] + 0x002a;
+			SA1.WaitByteAddress1 = SRAM + 0x0806;
+			SA1.WaitByteAddress2 = SRAM + 0x0808;
+		}
+   }
 
 	//Other
 

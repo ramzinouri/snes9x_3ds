@@ -95,24 +95,24 @@ export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 #CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 CFILES		:= zlib/adler32.c zlib/compress.c zlib/crc32.c zlib/deflate.c zlib/gzclose.c zlib/gzlib.c zlib/gzread.c \
 				zlib/gzwrite.c zlib/infback.c zlib/inffast.c zlib/inflate.c zlib/inftrees.c zlib/trees.c zlib/uncompr.c \
-				zlib/zutil.c unzip/unzip.c
+				zlib/zutil.c unzip/unzip.c \
+				7zip/7zAlloc.c 7zip/Bcj2.c 7zip/Bra.c 7zip/BraIA64.c 7zip/Bra86.c 7zip/7zArcIn.c 7zip/7zBuf.c 7zip/7zCrc.c 7zip/7zCrcOpt.c \
+				7zip/7zDec.c 7zip/7zFile.c 7zip/7zStream.c 7zip/Alloc.c 7zip/CpuArch.c 7zip/Delta.c 7zip/lzma2Dec.c 7zip/lzmaDec.c
+
 CPPFILES	:=	3dsmain.cpp 3dsmenu.cpp 3dsopt.cpp \
 			3dsgpu.cpp 3dssound.cpp 3dsui.cpp 3dsexit.cpp \
 			3dsconfig.cpp 3dsfiles.cpp 3dsinput.cpp 3dsmatrix.cpp \
 			3dsimpl.cpp 3dsimpl_tilecache.cpp 3dsimpl_gpu.cpp \
 			gpulib.cpp 3dsthemes.cpp lodepng.cpp \
-			Snes9x/bsx.cpp Snes9x/fxinst.cpp Snes9x/fxemu.cpp Snes9x/fxdbg.cpp \
-			Snes9x/c4.cpp Snes9x/c4emu.cpp \
-			Snes9x/soundux.cpp Snes9x/spc700.cpp Snes9x/apu.cpp \
-			Snes9x/cpuexec.cpp Snes9x/sa1cpu.cpp Snes9x/hwregisters.cpp \
-			Snes9x/cheats.cpp Snes9x/cheats2.cpp \
-			Snes9x/sdd1emu.cpp Snes9x/spc7110.cpp Snes9x/obc1.cpp \
+			Snes9x/bsx.cpp Snes9x/fxinst.cpp Snes9x/fxemu.cpp Snes9x/fxdbg.cpp Snes9x/c4.cpp Snes9x/c4emu.cpp \
+			Snes9x/soundux.cpp Snes9x/spc700.cpp Snes9x/apu.cpp Snes9x/cpuexec.cpp Snes9x/sa1cpu.cpp Snes9x/hwregisters.cpp \
+			Snes9x/cheats.cpp Snes9x/cheats2.cpp Snes9x/sdd1emu.cpp Snes9x/spc7110.cpp Snes9x/obc1.cpp \
 			Snes9x/seta.cpp Snes9x/seta010.cpp Snes9x/seta011.cpp Snes9x/seta018.cpp \
-			Snes9x/snapshot.cpp \
+			Snes9x/snapshot.cpp Snes9x/dsp.cpp Snes9x/dsp1.cpp Snes9x/dsp2.cpp Snes9x/dsp3.cpp Snes9x/dsp4.cpp \
 			Snes9x/cpu.cpp Snes9x/sa1.cpp Snes9x/debug.cpp Snes9x/apudebug.cpp Snes9x/sdd1.cpp Snes9x/tile.cpp Snes9x/srtc.cpp \
 			Snes9x/gfx.cpp Snes9x/gfxhw.cpp Snes9x/memmap.cpp Snes9x/cliphw.cpp \
-			Snes9x/dsp1.cpp Snes9x/ppu.cpp Snes9x/ppuvsect.cpp Snes9x/dma.cpp Snes9x/data.cpp Snes9x/globals.cpp \
-			
+			Snes9x/ppu.cpp Snes9x/ppuvsect.cpp Snes9x/dma.cpp Snes9x/data.cpp Snes9x/globals.cpp \
+		
 
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 PICAFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.v.pica)))
@@ -146,10 +146,12 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			-I$(CURDIR)/$(BUILD)/Snes9x \
 			-I$(CURDIR)/$(BUILD)/zlib \
 			-I$(CURDIR)/$(BUILD)/unzip \
+			-I$(CURDIR)/$(BUILD)/7zip \
 			-I$(CURDIR)/$(SOURCES) \
 			-I$(CURDIR)/$(SOURCES)/Snes9x \
 			-I$(CURDIR)/$(SOURCES)/zlib \
 			-I$(CURDIR)/$(SOURCES)/unzip \
+			-I$(CURDIR)/$(SOURCES)/7zip \
 
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
@@ -192,6 +194,7 @@ prep:
 	@[ -d $(BUILD)/Snes9x ] || mkdir -p $(BUILD)/Snes9x
 	@[ -d $(BUILD)/zlib ] || mkdir -p $(BUILD)/zlib
 	@[ -d $(BUILD)/unzip ] || mkdir -p $(BUILD)/unzip
+	@[ -d $(BUILD)/7zip ] || mkdir -p $(BUILD)/7zip
 	@[ -d $(OUTPUTDIR) ] || mkdir -p $(OUTPUTDIR)
 	@[ -d $(OUTPUT) ] || mkdir -p $(OUTPUT)
 	

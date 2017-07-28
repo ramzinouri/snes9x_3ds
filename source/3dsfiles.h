@@ -42,4 +42,5 @@ std::vector<std::string> file3dsGetFiles(char *extensions, int maxFiles);
 //----------------------------------------------------------------------
 bool IsFileExists(const char * filename);
 
+int FileLoader3ds(uint8* buffer, const char* filename, int32 maxsize);
 #endif

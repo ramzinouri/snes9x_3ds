@@ -986,10 +986,12 @@ void menu3dsUpdateDialogProgress(int pos,int len)
     float p=0;
     if(len!=0)
         p=(len-pos)*100/len;
+    if(p>100)
+        p=100;
     if(p>lastProgress)
     {
         menu3dsDrawDialogProgressBar(p);
-        lastProgress=lastProgress+1;
+        lastProgress=lastProgress+2;
     }
 }
 

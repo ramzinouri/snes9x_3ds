@@ -597,7 +597,7 @@ int totalRomFileCount = 0;
 //----------------------------------------------------------------------
 void fileGetAllFiles(void)
 {
-    std::vector<std::string> files = file3dsGetFiles("smc,sfc,fig,zip", 1000);
+    std::vector<std::string> files = file3dsGetFiles("smc, sfc, fig, swc, zip, 7z", 1000);
 
     totalRomFileCount = 0;
 

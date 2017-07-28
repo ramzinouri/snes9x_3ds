@@ -4,7 +4,7 @@
 #include "snes9x.h"
 #include "memmap.h"
 #include "ppu.h"
-#include "dsp1.h"
+//#include "dsp.h"
 #include "missing.h"
 #include "cpuexec.h"
 #include "debug.h"
@@ -51,7 +51,8 @@ struct SAPU APU;
 
 struct SSettings Settings;
 
-struct SDSP1 DSP1;
+//struct SDSP1 DSP1;
+
 
 struct SSA1Registers SA1Registers;
 
@@ -90,6 +91,12 @@ uint8 A1 = 0, A2 = 0, A3 = 0, A4 = 0, W1 = 0, W2 = 0, W3 = 0, W4 = 0;
 
 
 END_EXTERN_C
+
+struct SDSP0			DSP0;
+struct SDSP1			DSP1;
+struct SDSP2			DSP2;
+struct SDSP3			DSP3;
+struct SDSP4			DSP4;
 
 // Added from Snes9x v1.52
 struct SBSX BSX;

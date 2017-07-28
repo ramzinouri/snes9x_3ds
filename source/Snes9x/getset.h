@@ -5,7 +5,7 @@
 #define _GETSET_H_
 
 #include "ppu.h"
-#include "dsp1.h"
+#include "dsp.h"
 #include "cpuexec.h"
 #include "sa1.h"
 #include "spc7110.h"

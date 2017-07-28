@@ -52,7 +52,7 @@
 #define SMALLFIRST 3
 
 //File Formats go here
-enum file_formats { FILE_ZIP, FILE_DEFAULT };
+enum file_formats { FILE_ZIP, FILE_7ZIP, FILE_DEFAULT };
 
 class CMemory {
 public:

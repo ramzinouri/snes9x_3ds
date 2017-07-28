@@ -7285,7 +7285,8 @@ static void OpCB (void)
     else
 #endif
     {
-		if (DSP1.version == 3) return;
+		if (Settings.DSP == 4)
+            return;
 
         // We are basically moving all the checks for CPU.WaitingForInterrupt
         // in the S9xHandleFlags() method to here.
