@@ -340,7 +340,6 @@ static SRes LookToRead3ds_Look_Exact(const ILookInStream *pp, const void **buf, 
 
 int FileLoader3ds (uint8* buffer, const char* filename, int32 maxsize)
 {
-	STREAM ROMFile;
 	int32 TotalFileSize = 0;
 	int len = 0;
 	int nFormat=FILE_DEFAULT;
@@ -359,11 +358,12 @@ int FileLoader3ds (uint8* buffer, const char* filename, int32 maxsize)
 	_splitpath (filename, drive, dir, name, ext);
     _makepath (fname, drive, dir, name, ext);
 	
-	nFormat = FILE_DEFAULT;
 	if (strcasecmp (ext, "zip") == 0)
 		nFormat = FILE_ZIP;
     if (strcasecmp (ext, "7z") == 0)
 		nFormat = FILE_7ZIP;
+    if (strcasecmp (ext, "gz") == 0)
+        nFormat = FILE_GZIP;
 
     if(nFormat==FILE_ZIP)
 	{
@@ -553,10 +553,61 @@ int FileLoader3ds (uint8* buffer, const char* filename, int32 maxsize)
              return FALSE;
 		
 	}
+    else if(nFormat==FILE_GZIP)
+    {
+        FILE *f = fopen(fname, "rb");
+        if(f==NULL)
+            return NULL;
+        fseek(f, -4, SEEK_END);
+        FileSize = fgetc(f) | (fgetc(f) << 8) | (fgetc(f) << 16) | (fgetc(f) << 24);
+        fclose(f);
+        current_pos=FileSize;
+    
+        gzFile ROMFile;
+		if ((ROMFile = gzopen (fname, "rb")) == NULL)
+			return NULL;
+		strcpy (Memory.ROMFilename, fname);
+		
+		Memory.HeaderCount = 0;
+		uint8 *ptr = buffer;
+		bool8 more = FALSE;
+    
+
+    
+        while (current_pos>0) {
+            menu3dsUpdateDialogProgress(current_pos,FileSize);
+            if (current_pos>0xF000) {
+                gzread(ROMFile,ptr,0xF000);
+                ptr+=0xF000;
+                current_pos-=0xF000;
+            } else {
+                gzread(ROMFile,ptr,current_pos);
+                ptr+=current_pos;
+                current_pos=0;
+            }
+        }
+        menu3dsUpdateDialogProgress(current_pos,FileSize);
+        ptr=ROM;
+        gzclose(ROMFile);
+        
+        int calc_size = (FileSize / 0x2000) * 0x2000;
+    
+        if ((FileSize - calc_size == 512 && !Settings.ForceNoHeader) ||
+            Settings.ForceHeader)
+        {
+            memmove (ptr, ptr + 512, calc_size);
+            Memory.HeaderCount++;
+            FileSize -= 512;
+        }
+        
+        ptr += FileSize;
+        TotalFileSize += FileSize;
+    
+	}
 	else if(nFormat==FILE_DEFAULT)
     {
 		// any other roms go here
-
+        STREAM ROMFile;
 		if ((ROMFile = fopen (fname, "rb")) == NULL)
 			return (0);
 		
